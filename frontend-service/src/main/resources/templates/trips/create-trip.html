@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Viagem - Car Pooling</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #007bff;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            margin: 30px auto;
+        }
+
+        .form-title {
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            color: white;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(135deg, #0056b3, #003d82);
+            transform: translateY(-2px);
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/"><i class="fas fa-car"></i> Car Pooling</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/trips/search">Pesquisar</a></li>
+                <li class="nav-item"><a class="nav-link" href="/trips/my-trips">Minhas Viagens</a></li>
+                <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="form-container">
+    <h2 class="form-title">
+        <i class="fas fa-plus-circle"></i> Criar Nova Viagem
+    </h2>
+
+    <form method="POST" action="/trips/create">
+        <div class="mb-3">
+            <label for="origin" class="form-label">
+                <i class="fas fa-map-marker-alt"></i> Origem
+            </label>
+            <input type="text" class="form-control" id="origin" name="origin" 
+                   placeholder="Ex: Lisboa, Rua Principal 123" required>
+            <small class="help-text">Localização de partida</small>
+        </div>
+
+        <div class="mb-3">
+            <label for="destination" class="form-label">
+                <i class="fas fa-flag"></i> Destino
+            </label>
+            <input type="text" class="form-control" id="destination" name="destination" 
+                   placeholder="Ex: Porto, Centro" required>
+            <small class="help-text">Localização de chegada</small>
+        </div>
+
+        <div class="mb-3">
+            <label for="departureDateTime" class="form-label">
+                <i class="fas fa-calendar"></i> Data e Hora de Partida
+            </label>
+            <input type="datetime-local" class="form-control" id="departureDateTime" 
+                   name="departureDateTime" required>
+            <small class="help-text">Quando quer partir</small>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="availableSeats" class="form-label">
+                        <i class="fas fa-users"></i> Lugares Disponíveis
+                    </label>
+                    <input type="number" class="form-control" id="availableSeats" name="availableSeats" 
+                           min="1" max="7" value="3" required>
+                    <small class="help-text">Quantos passageiros cabem</small>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="totalCost" class="form-label">
+                        <i class="fas fa-euro-sign"></i> Custo Total
+                    </label>
+                    <input type="number" class="form-control" id="totalCost" name="totalCost" 
+                           min="0" step="0.01" placeholder="15.50" required>
+                    <small class="help-text">Será dividido pelos passageiros</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Exemplo:</strong> Se colocar 3 lugares e custo €15, cada passageiro pagará €5.
+        </div>
+
+        <button type="submit" class="btn btn-submit">
+            <i class="fas fa-check"></i> Criar Viagem
+        </button>
+
+        <a href="/dashboard" class="btn btn-outline-secondary w-100 mt-2">
+            <i class="fas fa-arrow-left"></i> Cancelar
+        </a>
+    </form>
+</div>
+
+<!-- Footer -->
+<footer style="background-color: #343a40; color: white; padding: 30px 0; margin-top: 50px; text-align: center;">
+    <div class="container">
+        <p>&copy; 2024 Car Pooling. Todos os direitos reservados.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

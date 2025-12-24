@@ -1,0 +1,240 @@
+{
+  "info": {
+    "name": "Car Pooling API",
+    "description": "Coleção de testes para Car Pooling Sharing Platform",
+    "version": "1.0"
+  },
+  "item": [
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"joao@example.com\",\n  \"password\": \"senha123456\",\n  \"fullName\": \"João Silva\",\n  \"phoneNumber\": \"+351912345678\",\n  \"role\": \"DRIVER\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Passenger",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria@example.com\",\n  \"password\": \"senha123456\",\n  \"fullName\": \"Maria Santos\",\n  \"phoneNumber\": \"+351987654321\",\n  \"role\": \"PASSENGER\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"joao@example.com\",\n  \"password\": \"senha123456\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/auth/user/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "user", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trip Service",
+      "item": [
+        {
+          "name": "Create Trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"driverId\": 1,\n  \"departureLocation\": \"Castelo Branco\",\n  \"destinationLocation\": \"Lisboa\",\n  \"departureDateTime\": \"2024-01-20T08:00:00\",\n  \"availableSeats\": 3,\n  \"totalCost\": 30.00,\n  \"distance\": 285.5\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/trips",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "trips"]
+            }
+          }
+        },
+        {
+          "name": "Get All Trips",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/trips",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "trips"]
+            }
+          }
+        },
+        {
+          "name": "Get Trip by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/trips/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "trips", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Available Trips",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/trips/available",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "trips", "available"]
+            }
+          }
+        },
+        {
+          "name": "Search Trips",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/trips/search?departure=Castelo Branco&destination=Lisboa&departureTime=2024-01-20T08:00:00",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "trips", "search"],
+              "query": [\n                {\n                  \"key\": \"departure\",\n                  \"value\": \"Castelo Branco\"\n                },\n                {\n                  \"key\": \"destination\",\n                  \"value\": \"Lisboa\"\n                },\n                {\n                  \"key\": \"departureTime\",\n                  \"value\": \"2024-01-20T08:00:00\"\n                }\n              ]
+            }
+          }
+        },
+        {
+          "name": "Create Reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": 1,\n  \"passengerId\": 2,\n  \"numberOfSeats\": 2\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/trips/reservations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "trips", "reservations"]
+            }
+          }
+        },
+        {
+          "name": "Get Reservations by Passenger",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/trips/reservations/passenger/2",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "trips", "reservations", "passenger", "2"]
+            }
+          }
+        },
+        {
+          "name": "Get Reservations by Trip",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/trips/1/reservations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "trips", "1", "reservations"]
+            }
+          }
+        },
+        {
+          "name": "Update Trip Status",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "http://localhost:8080/api/trips/1/status?status=IN_PROGRESS",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "trips", "1", "status"],
+              "query": [\n                {\n                  \"key\": \"status\",\n                  \"value\": \"IN_PROGRESS\"\n                }\n              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,854 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                     🎯 PLANO DE AÇÃO - PRÓXIMOS PASSOS                         ║
+║                   Como Completar o Projeto em 2-3 Semanas                      ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+═════════════════════════════════════════════════════════════════════════════════
+                           RESUMO EXECUTIVO
+═════════════════════════════════════════════════════════════════════════════════
+
+Projeto Atual: 60% completo (14.5/20 valores estimado)
+Meta Final: 85%+ completo (17-18/20 valores)
+Tempo Disponível: 2-3 semanas
+Recursos: 1 pessoa (pode ser paralelizável com equipa)
+
+PRIORIDADES:
+1. 🔴 CRÍTICO: Implementar 3 microserviços (vehicle, payment, location)
+2. 🟡 IMPORTANTE: Completar documentação e testes
+3. 🟢 DESEJÁVEL: Implementar admin-service e features avançadas
+
+═════════════════════════════════════════════════════════════════════════════════
+                  FASE 1: PREPARAÇÃO (1 dia - 2-3 horas)
+═════════════════════════════════════════════════════════════════════════════════
+
+ATIVIDADE 1.1: Verificar Ambiente
+──────────────────────────────────
+Tempo: 30 minutos
+
+PASSOS:
+1. Instalar/Verificar Maven
+   > mvn -v
+   Se não estiver: Download de https://maven.apache.org/download.cgi
+
+2. Instalar/Verificar Docker (opcional mas recomendado)
+   > docker -v
+   > docker-compose -v
+   Se não estiver: Download de https://www.docker.com/products/docker-desktop
+
+3. Verificar Java 17+
+   > java -version
+   Deve mostrar java 17 ou superior
+
+4. Clonar/Verificar repositório
+   > cd d:\car-pooling-sharing
+   > dir
+   Deve listar todos os serviços
+
+
+ATIVIDADE 1.2: Corrigir Dependências Críticas
+──────────────────────────────────────────────
+Tempo: 30 minutos
+
+PASSOS:
+
+1. Abrir d:\car-pooling-sharing\auth-service\pom.xml
+   Adicionar após <scope>runtime</scope> do postgresql:
+   
+   <!-- JWT Library para JwtTokenProvider -->
+   <dependency>
+       <groupId>io.jsonwebtoken</groupId>
+       <artifactId>jjwt-api</artifactId>
+       <version>0.12.3</version>
+   </dependency>
+   <dependency>
+       <groupId>io.jsonwebtoken</groupId>
+       <artifactId>jjwt-impl</artifactId>
+       <version>0.12.3</version>
+       <scope>runtime</scope>
+   </dependency>
+   <dependency>
+       <groupId>io.jsonwebtoken</groupId>
+       <artifactId>jjwt-jackson</artifactId>
+       <version>0.12.3</version>
+       <scope>runtime</scope>
+   </dependency>
+
+2. Abrir d:\car-pooling-sharing\trip-service\pom.xml
+   Verificar se tem spring-boot-starter-security (DEVE TER)
+   Se não tiver, adicionar:
+   
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-security</artifactId>
+   </dependency>
+
+3. Abrir d:\car-pooling-sharing\api-gateway\pom.xml
+   Verificar se tem springdoc-openapi (DEVE TER para Swagger)
+
+4. Abrir d:\car-pooling-sharing\eureka-server\pom.xml
+   Verificar se tem spring-cloud-starter-netflix-eureka-server (DEVE TER)
+
+5. Build do projeto:
+   > cd d:\car-pooling-sharing
+   > mvn clean package -DskipTests -q
+   Deve compilar sem erros (pode demorar 5-10 minutos primeira vez)
+
+
+ATIVIDADE 1.3: Atualizar API Gateway
+─────────────────────────────────────
+Tempo: 30 minutos
+
+Problema: API Gateway tem rotas para serviços que não existem
+Impacto: Erros 503 Service Unavailable
+
+SOLUÇÃO:
+1. Abrir d:\car-pooling-sharing\api-gateway\src\main\resources\application.yml
+2. COMENTAR as rotas para serviços inexistentes:
+   
+   # DESABILITADAS TEMPORARIAMENTE (serviços não implementados)
+   # - id: vehicle-service
+   #   uri: lb://vehicle-service
+   #   predicates:
+   #     - Path=/api/vehicles/**
+   #   filters:
+   #     - StripPrefix=2
+   
+   # - id: location-service
+   #   uri: lb://location-service
+   #   predicates:
+   #     - Path=/api/locations/**
+   #   filters:
+   #     - StripPrefix=2
+   
+   # - id: payment-service
+   #   uri: lb://payment-service
+   #   predicates:
+   #     - Path=/api/payments/**
+   #   filters:
+   #     - StripPrefix=2
+   
+   # - id: admin-service
+   #   uri: lb://admin-service
+   #   predicates:
+   #     - Path=/api/admin/**
+   #   filters:
+   #     - StripPrefix=2
+
+3. Rebuild:
+   > mvn clean package -DskipTests -q
+
+═════════════════════════════════════════════════════════════════════════════════
+           FASE 2: IMPLEMENTAR VEHICLE-SERVICE (2-3 dias - 8-12 horas)
+═════════════════════════════════════════════════════════════════════════════════
+
+OBJETIVO: Criar serviço de gestão de veículos para Car Sharing
+IMPACTO: +10% no projeto (treble de 60% para 70%)
+
+ESTRUTURA DO SERVIÇO:
+────────────────────
+
+vehicle-service/
+├── src/main/java/com/carpooling/vehicle/
+│   ├── VehicleServiceApplication.java
+│   ├── controller/
+│   │   └── VehicleController.java (6 endpoints)
+│   ├── service/
+│   │   └── VehicleService.java
+│   ├── repository/
+│   │   └── VehicleRepository.java
+│   ├── entity/
+│   │   ├── Vehicle.java
+│   │   ├── VehicleStatus.java
+│   │   └── VehicleType.java
+│   ├── dto/
+│   │   ├── CreateVehicleRequest.java
+│   │   └── VehicleDTO.java
+│   └── config/
+│       └── VehicleConfig.java
+├── src/main/resources/
+│   ├── application.yml
+│   └── application-docker.yml
+├── pom.xml
+├── Dockerfile
+└── .gitignore
+
+
+PASSO 2.1: Copiar Estrutura Base
+─────────────────────────────────
+Tempo: 30 minutos
+
+1. Copiar pasta auth-service para vehicle-service:
+   > cd d:\car-pooling-sharing
+   > xcopy auth-service vehicle-service /E /I
+
+2. Renomear ficheiros Java:
+   > auth-service/src/main/java/com/carpooling/auth/AuthServiceApplication.java
+   Para:
+   > vehicle-service/src/main/java/com/carpooling/vehicle/VehicleServiceApplication.java
+
+3. Atualizar nomes de pacotes em todos os ficheiros:
+   auth → vehicle
+   auth-service → vehicle-service
+
+
+PASSO 2.2: Criar Entidades
+──────────────────────────
+Tempo: 1 hora
+
+Criar d:\car-pooling-sharing\vehicle-service\src\main\java\com\carpooling\vehicle\entity\Vehicle.java:
+
+package com.carpooling.vehicle.entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Data
+@NoArgsConstructor
+@Entity
+@Table(name = "vehicles")
+public class Vehicle {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
+    private String licensePlate;
+    
+    @Column(nullable = false)
+    private String brand;
+    
+    @Column(nullable = false)
+    private String model;
+    
+    @Column(nullable = false)
+    private Integer year;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private VehicleType type; // CAR, ELECTRIC, VAN
+    
+    @Column(nullable = false)
+    private Long ownerId;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private VehicleStatus status; // AVAILABLE, IN_USE, MAINTENANCE
+    
+    @Column(nullable = false)
+    private BigDecimal pricePerHour; // €/hora
+    
+    @Column(nullable = false)
+    private BigDecimal pricePerKm; // €/km
+    
+    private String location; // GPS coordinates or address
+    
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+    
+    private LocalDateTime updatedAt;
+}
+
+
+Criar d:\car-pooling-sharing\vehicle-service\src\main\java\com\carpooling\vehicle\entity\VehicleType.java:
+
+package com.carpooling.vehicle.entity;
+
+public enum VehicleType {
+    CAR,
+    ELECTRIC,
+    VAN,
+    MOTORCYCLE
+}
+
+
+Criar d:\car-pooling-sharing\vehicle-service\src\main\java\com\carpooling\vehicle\entity\VehicleStatus.java:
+
+package com.carpooling.vehicle.entity;
+
+public enum VehicleStatus {
+    AVAILABLE,
+    IN_USE,
+    MAINTENANCE,
+    DISABLED
+}
+
+
+PASSO 2.3: Criar DTOs
+─────────────────────
+Tempo: 30 minutos
+
+Criar d:\car-pooling-sharing\vehicle-service\src\main\java\com\carpooling\vehicle\dto\VehicleDTO.java:
+
+package com.carpooling.vehicle.dto;
+
+import lombok.Data;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Data
+public class VehicleDTO {
+    private Long id;
+    private String licensePlate;
+    private String brand;
+    private String model;
+    private Integer year;
+    private String type;
+    private Long ownerId;
+    private String status;
+    private BigDecimal pricePerHour;
+    private BigDecimal pricePerKm;
+    private String location;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+
+
+Criar d:\car-pooling-sharing\vehicle-service\src\main\java\com\carpooling\vehicle\dto\CreateVehicleRequest.java:
+
+package com.carpooling.vehicle.dto;
+
+import lombok.Data;
+import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
+
+@Data
+public class CreateVehicleRequest {
+    @NotBlank(message = "License plate is required")
+    private String licensePlate;
+    
+    @NotBlank(message = "Brand is required")
+    private String brand;
+    
+    @NotBlank(message = "Model is required")
+    private String model;
+    
+    @NotNull(message = "Year is required")
+    @Min(1990)
+    private Integer year;
+    
+    @NotBlank(message = "Vehicle type is required")
+    private String type; // CAR, ELECTRIC, VAN, MOTORCYCLE
+    
+    @NotNull(message = "Owner ID is required")
+    private Long ownerId;
+    
+    @NotNull(message = "Price per hour is required")
+    @DecimalMin("0.01")
+    private BigDecimal pricePerHour;
+    
+    @NotNull(message = "Price per km is required")
+    @DecimalMin("0.01")
+    private BigDecimal pricePerKm;
+    
+    private String location;
+}
+
+
+PASSO 2.4: Criar Repository
+──────────────────────────
+Tempo: 15 minutos
+
+Criar d:\car-pooling-sharing\vehicle-service\src\main\java\com\carpooling\vehicle\repository\VehicleRepository.java:
+
+package com.carpooling.vehicle.repository;
+
+import com.carpooling.vehicle.entity.Vehicle;
+import com.carpooling.vehicle.entity.VehicleStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
+    Optional<Vehicle> findByLicensePlate(String licensePlate);
+    
+    List<Vehicle> findByOwnerId(Long ownerId);
+    
+    List<Vehicle> findByStatus(VehicleStatus status);
+    
+    List<Vehicle> findByOwnerIdAndStatus(Long ownerId, VehicleStatus status);
+}
+
+
+PASSO 2.5: Criar Service
+────────────────────────
+Tempo: 1 hora
+
+Criar d:\car-pooling-sharing\vehicle-service\src\main\java\com\carpooling\vehicle\service\VehicleService.java:
+
+package com.carpooling.vehicle.service;
+
+import com.carpooling.vehicle.dto.CreateVehicleRequest;
+import com.carpooling.vehicle.dto.VehicleDTO;
+import com.carpooling.vehicle.entity.Vehicle;
+import com.carpooling.vehicle.entity.VehicleStatus;
+import com.carpooling.vehicle.entity.VehicleType;
+import com.carpooling.vehicle.repository.VehicleRepository;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@AllArgsConstructor
+@Transactional
+public class VehicleService {
+    
+    private final VehicleRepository vehicleRepository;
+    
+    public VehicleDTO createVehicle(CreateVehicleRequest request) {
+        log.info("Creating vehicle with license plate: {}", request.getLicensePlate());
+        
+        // Validar se já existe
+        if (vehicleRepository.findByLicensePlate(request.getLicensePlate()).isPresent()) {
+            throw new IllegalArgumentException("Vehicle with this license plate already exists");
+        }
+        
+        Vehicle vehicle = new Vehicle();
+        vehicle.setLicensePlate(request.getLicensePlate());
+        vehicle.setBrand(request.getBrand());
+        vehicle.setModel(request.getModel());
+        vehicle.setYear(request.getYear());
+        vehicle.setType(VehicleType.valueOf(request.getType()));
+        vehicle.setOwnerId(request.getOwnerId());
+        vehicle.setStatus(VehicleStatus.AVAILABLE);
+        vehicle.setPricePerHour(request.getPricePerHour());
+        vehicle.setPricePerKm(request.getPricePerKm());
+        vehicle.setLocation(request.getLocation());
+        vehicle.setCreatedAt(LocalDateTime.now());
+        
+        Vehicle saved = vehicleRepository.save(vehicle);
+        log.info("Vehicle created with ID: {}", saved.getId());
+        
+        return mapToDTO(saved);
+    }
+    
+    public VehicleDTO getVehicleById(Long id) {
+        Vehicle vehicle = vehicleRepository.findById(id)
+            .orElseThrow(() -> new NoSuchElementException("Vehicle not found with ID: " + id));
+        return mapToDTO(vehicle);
+    }
+    
+    public List<VehicleDTO> getAllVehicles() {
+        return vehicleRepository.findAll().stream()
+            .map(this::mapToDTO)
+            .collect(Collectors.toList());
+    }
+    
+    public List<VehicleDTO> getAvailableVehicles() {
+        return vehicleRepository.findByStatus(VehicleStatus.AVAILABLE).stream()
+            .map(this::mapToDTO)
+            .collect(Collectors.toList());
+    }
+    
+    public List<VehicleDTO> getVehiclesByOwner(Long ownerId) {
+        return vehicleRepository.findByOwnerId(ownerId).stream()
+            .map(this::mapToDTO)
+            .collect(Collectors.toList());
+    }
+    
+    public VehicleDTO updateVehicleStatus(Long id, String newStatus) {
+        Vehicle vehicle = vehicleRepository.findById(id)
+            .orElseThrow(() -> new NoSuchElementException("Vehicle not found with ID: " + id));
+        
+        vehicle.setStatus(VehicleStatus.valueOf(newStatus));
+        vehicle.setUpdatedAt(LocalDateTime.now());
+        
+        Vehicle updated = vehicleRepository.save(vehicle);
+        log.info("Vehicle {} status updated to: {}", id, newStatus);
+        
+        return mapToDTO(updated);
+    }
+    
+    public BigDecimal calculateRentalCost(Long vehicleId, Integer hours, Integer kilometers) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+            .orElseThrow(() -> new NoSuchElementException("Vehicle not found with ID: " + vehicleId));
+        
+        BigDecimal hourCost = vehicle.getPricePerHour().multiply(BigDecimal.valueOf(hours));
+        BigDecimal kmCost = vehicle.getPricePerKm().multiply(BigDecimal.valueOf(kilometers));
+        
+        return hourCost.add(kmCost);
+    }
+    
+    private VehicleDTO mapToDTO(Vehicle vehicle) {
+        VehicleDTO dto = new VehicleDTO();
+        dto.setId(vehicle.getId());
+        dto.setLicensePlate(vehicle.getLicensePlate());
+        dto.setBrand(vehicle.getBrand());
+        dto.setModel(vehicle.getModel());
+        dto.setYear(vehicle.getYear());
+        dto.setType(vehicle.getType().toString());
+        dto.setOwnerId(vehicle.getOwnerId());
+        dto.setStatus(vehicle.getStatus().toString());
+        dto.setPricePerHour(vehicle.getPricePerHour());
+        dto.setPricePerKm(vehicle.getPricePerKm());
+        dto.setLocation(vehicle.getLocation());
+        dto.setCreatedAt(vehicle.getCreatedAt());
+        dto.setUpdatedAt(vehicle.getUpdatedAt());
+        return dto;
+    }
+}
+
+
+PASSO 2.6: Criar Controller
+───────────────────────────
+Tempo: 45 minutos
+
+Criar d:\car-pooling-sharing\vehicle-service\src\main\java\com\carpooling\vehicle\controller\VehicleController.java:
+
+package com.carpooling.vehicle.controller;
+
+import com.carpooling.vehicle.dto.CreateVehicleRequest;
+import com.carpooling.vehicle.dto.VehicleDTO;
+import com.carpooling.vehicle.service.VehicleService;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/vehicles")
+@AllArgsConstructor
+public class VehicleController {
+    
+    private final VehicleService vehicleService;
+    
+    @PostMapping
+    public ResponseEntity<VehicleDTO> createVehicle(@Valid @RequestBody CreateVehicleRequest request) {
+        VehicleDTO vehicle = vehicleService.createVehicle(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(vehicle);
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<VehicleDTO> getVehicle(@PathVariable Long id) {
+        VehicleDTO vehicle = vehicleService.getVehicleById(id);
+        return ResponseEntity.ok(vehicle);
+    }
+    
+    @GetMapping
+    public ResponseEntity<List<VehicleDTO>> getAllVehicles() {
+        List<VehicleDTO> vehicles = vehicleService.getAllVehicles();
+        return ResponseEntity.ok(vehicles);
+    }
+    
+    @GetMapping("/available")
+    public ResponseEntity<List<VehicleDTO>> getAvailableVehicles() {
+        List<VehicleDTO> vehicles = vehicleService.getAvailableVehicles();
+        return ResponseEntity.ok(vehicles);
+    }
+    
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<List<VehicleDTO>> getVehiclesByOwner(@PathVariable Long ownerId) {
+        List<VehicleDTO> vehicles = vehicleService.getVehiclesByOwner(ownerId);
+        return ResponseEntity.ok(vehicles);
+    }
+    
+    @PutMapping("/{id}/status")
+    public ResponseEntity<VehicleDTO> updateVehicleStatus(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        VehicleDTO vehicle = vehicleService.updateVehicleStatus(id, status);
+        return ResponseEntity.ok(vehicle);
+    }
+    
+    @PostMapping("/calculate-cost")
+    public ResponseEntity<BigDecimal> calculateRentalCost(
+            @RequestParam Long vehicleId,
+            @RequestParam Integer hours,
+            @RequestParam Integer kilometers) {
+        BigDecimal cost = vehicleService.calculateRentalCost(vehicleId, hours, kilometers);
+        return ResponseEntity.ok(cost);
+    }
+}
+
+
+PASSO 2.7: Configurar application.yml
+──────────────────────────────────────
+Tempo: 15 minutos
+
+Criar d:\car-pooling-sharing\vehicle-service\src\main\resources\application.yml:
+
+spring:
+  application:
+    name: vehicle-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/carpooling_vehicles
+    username: carpooling
+    password: carpooling123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8083
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+logging:
+  level:
+    root: INFO
+    com.carpooling: DEBUG
+
+
+PASSO 2.8: Atualizar pom.xml
+────────────────────────────
+Tempo: 15 minutos
+
+Editar d:\car-pooling-sharing\vehicle-service\pom.xml:
+Mudar <artifactId>auth-service</artifactId> para <artifactId>vehicle-service</artifactId>
+Mudar <name>Auth Service</name> para <name>Vehicle Service</name>
+Mudar <description>...</description> para descrição do serviço de veículos
+
+
+PASSO 2.9: Testar Compilação
+────────────────────────────
+Tempo: 5-10 minutos
+
+> cd d:\car-pooling-sharing
+> mvn clean package -DskipTests -q
+
+Deve compilar sem erros
+
+
+PASSO 2.10: Atualizar docker-compose.yml
+─────────────────────────────────────────
+Tempo: 10 minutos
+
+Abrir d:\car-pooling-sharing\docker-compose.yml
+Adicionar após trip-service:
+
+  vehicle-service:
+    build:
+      context: ./vehicle-service
+      dockerfile: Dockerfile
+    container_name: vehicle-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/carpooling_vehicles
+      SPRING_DATASOURCE_USERNAME: carpooling
+      SPRING_DATASOURCE_PASSWORD: carpooling123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - carpooling-network
+    depends_on:
+      - postgres
+      - eureka-server
+
+
+PASSO 2.11: Re-habilitar Rota no API Gateway
+──────────────────────────────────────────────
+Tempo: 5 minutos
+
+Abrir d:\car-pooling-sharing\api-gateway\src\main\resources\application.yml
+Descomentar:
+
+        - id: vehicle-service
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/vehicles/**
+          filters:
+            - StripPrefix=2
+
+
+═════════════════════════════════════════════════════════════════════════════════
+     FASE 3: IMPLEMENTAR PAYMENT-SERVICE (2-3 dias - 8-12 horas)
+═════════════════════════════════════════════════════════════════════════════════
+
+OBJETIVO: Criar serviço de processamento de pagamentos
+IMPACTO: +10% no projeto (total 80%)
+
+ESTRUTURA SIMILAR A VEHICLE-SERVICE:
+- Entidades: Payment, PaymentStatus, TransactionLog
+- DTOs: CreatePaymentRequest, PaymentDTO
+- Endpoints: POST /api/payments, GET /api/payments/trip/{tripId}, GET /api/payments/status/{id}
+
+PASSOS SIMILARES AO VEHICLE-SERVICE:
+1. Copiar vehicle-service para payment-service
+2. Criar entidades (Payment, PaymentStatus)
+3. Criar DTOs (CreatePaymentRequest, PaymentDTO)
+4. Criar repository e service
+5. Criar controller com endpoints de pagamento
+6. Configurar application.yml
+7. Adicionar ao docker-compose.yml
+8. Habilitar rota no API Gateway
+
+═════════════════════════════════════════════════════════════════════════════════
+     FASE 4: IMPLEMENTAR LOCATION-SERVICE (2-3 dias - 8-12 horas)
+═════════════════════════════════════════════════════════════════════════════════
+
+OBJETIVO: Criar serviço de geolocalização e rotas
+IMPACTO: +10% no projeto (total 90%)
+
+ESTRUTURA SIMILAR:
+- Entidades: Location, Route
+- DTOs: LocationDTO, RouteDTO
+- Endpoints: GET /api/locations/nearby, POST /api/routes/calculate
+
+Pode usar mock de Google Maps API ou apenas lógica básica de geolocalização
+
+═════════════════════════════════════════════════════════════════════════════════
+              FASE 5: TESTES E VALIDAÇÃO (3-4 dias - 12-16 horas)
+═════════════════════════════════════════════════════════════════════════════════
+
+ATIVIDADE 5.1: Testes Unitários Básicos
+────────────────────────────────────────
+
+Adicionar JUnit 5 e Mockito ao pom.xml root:
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+
+Criar d:\car-pooling-sharing\auth-service\src\test\java\com\carpooling\auth\service\AuthServiceTest.java:
+
+@SpringBootTest
+class AuthServiceTest {
+    @MockBean
+    private UserRepository userRepository;
+    
+    @Autowired
+    private AuthService authService;
+    
+    @Test
+    void testRegisterNewUser() {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("test@example.com");
+        request.setPassword("password123");
+        
+        // Assert que user foi guardado
+    }
+}
+
+
+ATIVIDADE 5.2: Testar Docker Compose
+──────────────────────────────────────
+
+> cd d:\car-pooling-sharing
+> docker-compose up -d
+> sleep 30
+> curl http://localhost:8761  # Eureka
+> curl http://localhost:8080/api/auth/login  # Gateway (deve dizer "Method not allowed" - OK)
+> docker-compose down
+
+
+ATIVIDADE 5.3: Validar Swagger/OpenAPI
+───────────────────────────────────────
+
+Adicionar annotations aos controllers:
+
+@RestController
+@RequestMapping("/api/vehicles")
+@Tag(name = "Vehicles", description = "Vehicle Management API")
+public class VehicleController {
+    
+    @PostMapping
+    @Operation(summary = "Create a new vehicle")
+    @ApiResponse(responseCode = "201", description = "Vehicle created")
+    public ResponseEntity<VehicleDTO> createVehicle(...) {
+        ...
+    }
+}
+
+═════════════════════════════════════════════════════════════════════════════════
+                        CRONOGRAMA SUGERIDO
+═════════════════════════════════════════════════════════════════════════════════
+
+SEMANA 1:
+  Segunda-Quinta: Fase 2 (Vehicle Service) - 8-12 horas
+  Sexta: Início Fase 3 (Payment Service) - 4-5 horas
+
+SEMANA 2:
+  Segunda-Quarta: Completar Fase 3 (Payment Service) - 4-8 horas
+  Quinta-Sexta: Fase 4 (Location Service) - 8-10 horas
+
+SEMANA 3:
+  Segunda-Quarta: Testes, Validação, Documentação - 6-8 horas
+  Quinta: Review e ajustes finais - 4 horas
+  Sexta: Preparação apresentação - 2-3 horas
+
+═════════════════════════════════════════════════════════════════════════════════
+                    CHECKLIST DE VERIFICAÇÃO
+═════════════════════════════════════════════════════════════════════════════════
+
+Antes de Apresentar, Verificar:
+
+[ ] Vehicle Service
+    [ ] Código Java compila sem erros
+    [ ] Controller tem 6 endpoints
+    [ ] Testes básicos passam
+    [ ] Swagger documentation está ok
+    [ ] Docker build funciona
+    [ ] Docker-compose traz o serviço up com sucesso
+
+[ ] Payment Service
+    [ ] Código Java compila sem erros
+    [ ] Controller tem pelo menos 3 endpoints
+    [ ] Integração com Trip Service funciona
+    [ ] Docker funciona
+
+[ ] Location Service
+    [ ] Código Java compila sem erros
+    [ ] Controller tem endpoints de localização
+    [ ] Docker funciona
+
+[ ] API Gateway
+    [ ] Todas as 6 rotas funcionam
+    [ ] Roteamento é dinâmico via Eureka
+    [ ] Load balancing funciona
+
+[ ] Frontend
+    [ ] Login funciona com auth-service
+    [ ] Criar viagem funciona com trip-service
+    [ ] Pesquisa de viagens funciona
+    [ ] Reservar viagem funciona
+
+[ ] Documentação
+    [ ] README.md atualizado
+    [ ] Swagger documentation completa
+    [ ] Postman collection atualizado
+    [ ] Diagrama de arquitetura atualizado
+
+[ ] Docker
+    [ ] docker-compose up -d levanta todos os serviços
+    [ ] Eureka Dashboard acessível em http://localhost:8761
+    [ ] Todos os 8 serviços registam-se no Eureka
+    [ ] Testes de ponta a ponta passam
+
+═════════════════════════════════════════════════════════════════════════════════
+                            FIM DO PLANO DE AÇÃO
+═════════════════════════════════════════════════════════════════════════════════
+
+Com este plano, deve conseguir elevar o projeto de 60% para 85-90% em 2-3 semanas.
+
+Estimativa de Pontuação Final:
+- Apresentação: 1.8/2 valores
+- Prototipo: 15-16/18 valores
+- TOTAL: 16.8-17.8/20 valores (84-89%)
+
+Sucesso! 🚀

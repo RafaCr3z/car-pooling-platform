@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Viagens - Car Pooling</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #007bff;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+        }
+
+        .trip-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .trip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .trip-route-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .trip-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .trip-status.open {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .trip-status.in-progress {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+
+        .trip-status.completed {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+
+        .trip-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .detail-item i {
+            color: var(--primary-color);
+            width: 25px;
+            margin-right: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/"><i class="fas fa-car"></i> Car Pooling</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/trips/search">Pesquisar</a></li>
+                <li class="nav-item"><a class="nav-link" href="/trips/create">+ Nova Viagem</a></li>
+                <li class="nav-item"><a class="nav-link" href="/trips/my-reservations">Minhas Reservas</a></li>
+                <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2 style="font-weight: bold; margin-bottom: 30px;">
+        <i class="fas fa-road"></i> Minhas Viagens
+    </h2>
+
+    <th:block th:if="${!trips.isEmpty()}">
+        <div th:each="trip : ${trips}">
+            <div class="trip-card">
+                <div class="trip-header">
+                    <div class="trip-route-text">
+                        <i class="fas fa-arrow-right"></i> 
+                        <span th:text="${trip.departureLocation}"></span> 
+                        → 
+                        <span th:text="${trip.destinationLocation}"></span>
+                    </div>
+                    <span class="trip-status open">
+                        <i class="fas fa-check-circle"></i> Ativa
+                    </span>
+                </div>
+
+                <div class="trip-details">
+                    <div class="detail-item">
+                        <i class="fas fa-calendar"></i>
+                        <small th:text="${trip.departureDateTime}"></small>
+                    </div>
+
+                    <div class="detail-item">
+                        <i class="fas fa-user"></i>
+                        <small>
+                            <span th:text="${trip.occupiedSeats}"></span> / 
+                            <span th:text="${trip.availableSeats}"></span> lugares
+                        </small>
+                    </div>
+
+                    <div class="detail-item">
+                        <i class="fas fa-euro-sign"></i>
+                        <small th:text="'€' + ${trip.costPerPassenger} + ' por pessoa'"></small>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <a href="#" class="btn btn-sm btn-info">
+                        <i class="fas fa-eye"></i> Detalhes
+                    </a>
+                    <a href="#" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a href="#" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash"></i> Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block th:if="${trips.isEmpty()}">
+        <div class="empty-state">
+            <i class="fas fa-car"></i>
+            <h4>Nenhuma viagem criada</h4>
+            <p>Comece a partilhar viagens e ganhe dinheiro!</p>
+            <a href="/trips/create" class="btn btn-primary mt-3">
+                <i class="fas fa-plus"></i> Criar Viagem
+            </a>
+        </div>
+    </th:block>
+</div>
+
+<!-- Footer -->
+<footer style="background-color: #343a40; color: white; padding: 30px 0; margin-top: 50px; text-align: center;">
+    <div class="container">
+        <p>&copy; 2024 Car Pooling. Todos os direitos reservados.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

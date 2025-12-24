@@ -1,0 +1,257 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                      ARQUITETURA - CAR POOLING SHARING                        ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          CLIENTE / UTILIZADOR                               │
+│                    (Browser / Aplicação Móvel)                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ HTTP/HTTPS
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         🌐 FRONTEND SERVICE (Port 3000)                      │
+│                                                                              │
+│  • Thymeleaf Templates (Bootstrap CSS)    ou    React/Vue.js                 │
+│  • Login / Register                                                          │
+│  • Dashboard de Utilizador                                                   │
+│  • Pesquisa e Reserva de Viagens                                             │
+│  • Gestão de Perfil                                                          │
+│  • Dashboard Administrativo (para admins)                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ REST API Calls
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 🚪 API GATEWAY (Port 8080 - Spring Cloud Gateway)             │
+│                                                                              │
+│   Roteamento Inteligente:                                                    │
+│   • /api/auth/**    → Auth Service (8081)                                    │
+│   • /api/trips/**   → Trip Service (8082)                                    │
+│   • /api/vehicles/** → Vehicle Service (8083)                                │
+│   • /api/payments/** → Payment Service (8084)                                │
+│   • /api/admin/**   → Admin Service (8085)                                   │
+│   • /api/locations/** → Location Service (8086)                              │
+│                                                                              │
+│   Features:                                                                  │
+│   • Load Balancing (Descoberta automática via Eureka)                        │
+│   • Circuit Breaker (Resilience4j)                                           │
+│   • Rate Limiting (opcional)                                                 │
+│   • CORS Configuration                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │               │               │
+                    ▼               ▼               ▼
+        ┌──────────────────┐ ┌────────────────┐ ┌──────────────┐
+        │ 🔐 AUTH SERVICE  │ │ 🚕 TRIP SERVICE│ │ 🚙 VEHICLE   │
+        │ (Port 8081)      │ │ (Port 8082)    │ │ SERVICE      │
+        │                  │ │                │ │ (Port 8083)  │
+        │ Endpoints:       │ │ Endpoints:     │ │              │
+        │ POST /register   │ │ POST /create   │ │ POST /create │
+        │ POST /login      │ │ GET /list      │ │ GET /search  │
+        │ GET /user/{id}   │ │ POST /reserve  │ │ POST /book   │
+        │ PUT /update      │ │ GET /search    │ │ GET /details │
+        │                  │ │                │ │              │
+        │ JWT Auth Service │ │ Cost Calc      │ │ Rental Mgmt  │
+        └──────┬───────────┘ └────────┬───────┘ └──────┬───────┘
+               │                      │               │
+               └──────────┬───────────┴───────────────┘
+                          │
+                          ▼
+        ┌─────────────────────────────────────────────────────┐
+        │            💳 PAYMENT SERVICE (Port 8084)           │
+        │                                                     │
+        │ Endpoints:                                          │
+        │ POST /process          (processar pagamento)        │
+        │ GET /history/{user}    (histórico)                  │
+        │ POST /split            (dividir despesas)           │
+        │                                                     │
+        │ Calcula e divide custos entre passageiros           │
+        └─────────────────────────────────────────────────────┘
+                          │
+                          ▼
+        ┌─────────────────────────────────────────────────────┐
+        │           📍 LOCATION SERVICE (Port 8086)           │
+        │                                                     │
+        │ Endpoints:                                          │
+        │ POST /calculate         (distância)                 │
+        │ GET /nearby            (viagens próximas)          │
+        │ POST /route            (rota otimizada)            │
+        │                                                     │
+        │ Integra: Google Maps, OpenStreetMap                │
+        └─────────────────────────────────────────────────────┘
+                          │
+                          ▼
+        ┌─────────────────────────────────────────────────────┐
+        │           ⚙️ ADMIN SERVICE (Port 8085)              │
+        │                                                     │
+        │ Endpoints:                                          │
+        │ GET /statistics       (estatísticas)               │
+        │ GET /users           (lista de users)              │
+        │ PUT /users/{id}/lock  (bloquear conta)             │
+        │ GET /reports         (relatórios)                  │
+        │                                                     │
+        │ Dashboard administrativo                            │
+        │ Monitorização de CO₂ poupado                       │
+        └─────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      🔍 SERVICE DISCOVERY (Port 8761)                        │
+│                          EUREKA SERVER                                       │
+│                                                                              │
+│  Responsabilidades:                                                          │
+│  • Registo automático de todos os serviços                                   │
+│  • Discovery (cliente descobre servidor automaticamente)                     │
+│  • Health monitoring                                                         │
+│  • Load balancing (fornece múltiplas instâncias)                             │
+│  • Dashboard web: http://localhost:8761/                                    │
+│                                                                              │
+│  Todos os serviços se registam aqui via:                                     │
+│  @EnableDiscoveryClient                                                      │
+│  eureka.client.serviceUrl.defaultZone: http://localhost:8761/eureka/        │
+└─────────────────────────────────────────────────────────────────────────────┘
+                          ▲
+                          │
+        ┌─────────────────┴─────────────────┐
+        │                                   │
+        ▼                                   ▼
+┌──────────────────────────┐    ┌──────────────────────────┐
+│  SERVICE 1 Instance      │    │  SERVICE N Instance      │
+│  (Spring Boot App)       │    │  (Spring Boot App)       │
+│                          │    │                          │
+│  Registers to Eureka     │    │  Registers to Eureka     │
+└──────────────────────────┘    └──────────────────────────┘
+
+                                    ▲
+                                    │
+                                    │ JDBC
+                                    │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         🗄️ POSTGRESQL DATABASE                               │
+│                                                                              │
+│  Bases de Dados Separadas:                                                   │
+│  • carpooling_auth      (Utilizadores, roles)                                │
+│  • carpooling_trips     (Viagens, reservas)                                  │
+│  • carpooling_vehicles  (Veículos)                                           │
+│  • carpooling_payments  (Pagamentos, transações)                             │
+│  • carpooling_admin     (Logs, métricas)                                     │
+│                                                                              │
+│  Driver: PostgreSQL 15                                                       │
+│  Container: postgres:15                                                      │
+│  Port: 5432                                                                  │
+│  User: carpooling / Password: carpooling123                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                        COMUNICAÇÃO ENTRE SERVIÇOS                             ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+Trip Service precisa de dados do Auth Service:
+  Trip Service --[OpenFeign]--> Auth Service (8081)
+  @FeignClient(name = "auth-service")
+  public interface AuthServiceClient { ... }
+
+Payment Service precisa de dados do Trip Service:
+  Payment Service --[OpenFeign]--> Trip Service (8082)
+  @FeignClient(name = "trip-service")
+  public interface TripServiceClient { ... }
+
+Todos usam Circuit Breaker:
+  @CircuitBreaker(name = "serviceName", fallbackMethod = "fallback")
+  Retorna dados em cache se serviço falhar
+
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                         FLUXO DE UMA RESERVA                                  ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+1. Utilizador acede Frontend (Port 3000)
+   │
+2. Faz login em /api/auth/login (via API Gateway)
+   │
+   ├─> Auth Service (8081) valida credenciais
+   │   └─> Retorna JWT token
+   │
+3. Pesquisa viagens em /api/trips/search (via API Gateway)
+   │
+   ├─> Trip Service (8082) retorna viagens disponíveis
+   │   └─> Pode chamar Location Service (8086) para filtrar por proximidade
+   │
+4. Seleciona viagem e faz reserva em /api/trips/reservations (via API Gateway)
+   │
+   ├─> Trip Service (8082) cria reserva
+   │   ├─> Valida lugares disponíveis
+   │   ├─> Calcula custo automático
+   │   └─> Atualiza estado da viagem
+   │
+5. Sistema processa pagamento via Payment Service (8084)
+   │
+   ├─> Payment Service processa pagamento
+   │   ├─> Divide custo entre passageiros
+   │   ├─> Gera recibo
+   │   └─> Registra no histórico
+   │
+6. Admin visualiza em /api/admin/statistics (via API Gateway)
+   │
+   ├─> Admin Service (8085) retorna estatísticas
+   │   ├─> Número total de viagens
+   │   ├─> Receita total
+   │   ├─> CO₂ poupado
+   │   └─> Utilizadores ativos
+
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                      ESCALABILIDADE - MÚLTIPLAS INSTÂNCIAS                     ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+Com Docker Compose, podemos escalar:
+
+  docker-compose up -d --scale trip-service=3
+
+Isto cria 3 instâncias de Trip Service:
+  • trip-service_1 (porta 8082)
+  • trip-service_2 (porta 8083)
+  • trip-service_3 (porta 8084)
+
+Eureka automaticamente descobre as 3 instâncias
+API Gateway faz load balancing entre as 3
+
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                         TECNOLOGIAS UTILIZADAS                                ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+Backend:
+  • Java 17
+  • Spring Boot 3.2.0
+  • Spring Cloud 2023.0.0
+  • Spring Data JPA
+  • Spring Security
+  • JWT (io.jsonwebtoken)
+  • Resilience4j (Circuit Breaker)
+  • OpenFeign (Inter-service communication)
+  • PostgreSQL JDBC Driver
+  • Springdoc OpenAPI (Swagger)
+  • Lombok
+  • Maven
+
+DevOps/Infra:
+  • Docker
+  • Docker Compose
+  • PostgreSQL 15
+  • Eureka Server (Netflix)
+  • Spring Cloud Gateway
+
+Frontend (futuramente):
+  • Thymeleaf + Bootstrap (ou)
+  • React/Vue.js
+
+Monitorização (futuro):
+  • Prometheus
+  • Grafana
+  • ELK Stack
+  • Distributed Tracing
+
+╔═══════════════════════════════════════════════════════════════════════════════╗
+
+Diagrama criado: 24 de Dezembro de 2024
+Para consultar:  cat ARQUITETURA.txt

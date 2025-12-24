@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Reservas - Car Pooling</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --success-color: #28a745;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+        }
+
+        .reservation-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--success-color);
+        }
+
+        .reservation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .reservation-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-confirmed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-completed {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+
+        .reservation-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .detail-item i {
+            color: var(--primary-color);
+            width: 25px;
+            margin-right: 10px;
+        }
+
+        .price-section {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: right;
+            margin-top: 15px;
+        }
+
+        .price-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .price-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--success-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/"><i class="fas fa-car"></i> Car Pooling</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/trips/search">Pesquisar</a></li>
+                <li class="nav-item"><a class="nav-link" href="/trips/my-trips">Minhas Viagens</a></li>
+                <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2 style="font-weight: bold; margin-bottom: 30px;">
+        <i class="fas fa-clipboard-list"></i> Minhas Reservas
+    </h2>
+
+    <th:block th:if="${!reservations.isEmpty()}">
+        <div th:each="reservation : ${reservations}">
+            <div class="reservation-card">
+                <div class="reservation-header">
+                    <div>
+                        <strong>Viagem ID:</strong> <span th:text="${reservation.tripId}"></span>
+                    </div>
+                    <span class="reservation-status" 
+                          th:classappend="${reservation.status == 'PENDING' ? 'status-pending' : 
+                                          reservation.status == 'CONFIRMED' ? 'status-confirmed' : 'status-completed'}">
+                        <i class="fas" th:classappend="${reservation.status == 'PENDING' ? 'fa-clock' : 'fa-check-circle'}"></i>
+                        <span th:text="${reservation.status == 'PENDING' ? 'Pendente' : 
+                                       reservation.status == 'CONFIRMED' ? 'Confirmada' : 'Completa'}"></span>
+                    </span>
+                </div>
+
+                <div class="reservation-details">
+                    <div class="detail-item">
+                        <i class="fas fa-user"></i>
+                        <small th:text="${reservation.numberOfSeats} + ' lugar(es)'"></small>
+                    </div>
+
+                    <div class="detail-item">
+                        <i class="fas fa-id-card"></i>
+                        <small>Reserva #<span th:text="${reservation.id}"></span></small>
+                    </div>
+                </div>
+
+                <div class="price-section">
+                    <div class="price-label">Preço Total:</div>
+                    <div class="price-value" th:text="'€' + ${reservation.totalPrice}"></div>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <a href="#" class="btn btn-sm btn-info">
+                        <i class="fas fa-eye"></i> Detalhes
+                    </a>
+                    <th:block th:if="${reservation.status == 'PENDING'}">
+                        <a href="#" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i> Cancelar
+                        </a>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block th:if="${reservations.isEmpty()}">
+        <div class="empty-state">
+            <i class="fas fa-bookmark"></i>
+            <h4>Nenhuma reserva realizada</h4>
+            <p>Encontre e reserve uma viagem!</p>
+            <a href="/trips/search" class="btn btn-primary mt-3">
+                <i class="fas fa-search"></i> Pesquisar Viagens
+            </a>
+        </div>
+    </th:block>
+</div>
+
+<!-- Footer -->
+<footer style="background-color: #343a40; color: white; padding: 30px 0; margin-top: 50px; text-align: center;">
+    <div class="container">
+        <p>&copy; 2024 Car Pooling. Todos os direitos reservados.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

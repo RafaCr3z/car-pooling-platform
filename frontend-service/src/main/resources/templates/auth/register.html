@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registar - Car Pooling</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px 0;
+        }
+
+        .register-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .register-header h2 {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 10px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border: none;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-register:hover {
+            background: linear-gradient(135deg, #0056b3, #003d82);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .login-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <div class="register-header">
+        <h2><i class="fas fa-car"></i> Car Pooling</h2>
+        <p class="text-muted">Crie a sua conta</p>
+    </div>
+
+    <!-- Messages -->
+    <th:block th:if="${param.error}">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i>
+            <strong>Erro!</strong> <span th:text="${param.error[0]}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </th:block>
+
+    <!-- Register Form -->
+    <form method="POST" action="/register">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="email" class="form-label">
+                    <i class="fas fa-envelope"></i> Email
+                </label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="seu@email.com" required>
+            </div>
+            <div class="col-md-6">
+                <label for="phoneNumber" class="form-label">
+                    <i class="fas fa-phone"></i> Telemóvel
+                </label>
+                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="91 234 5678" required>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <label for="password" class="form-label">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+            </div>
+            <div class="col-md-6">
+                <label for="confirmPassword" class="form-label">
+                    <i class="fas fa-lock"></i> Confirmar Password
+                </label>
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required>
+            </div>
+        </div>
+
+        <label for="fullName" class="form-label">
+            <i class="fas fa-user"></i> Nome Completo
+        </label>
+        <input type="text" class="form-control" id="fullName" name="fullName" placeholder="João Silva" required>
+
+        <label for="role" class="form-label">
+            <i class="fas fa-id-badge"></i> Tipo de Utilizador
+        </label>
+        <select class="form-select" id="role" name="role" required>
+            <option value="">-- Selecione um tipo --</option>
+            <option value="PASSENGER">Passageiro</option>
+            <option value="DRIVER">Condutor</option>
+        </select>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+            <label class="form-check-label" for="terms">
+                Concordo com os <a href="#">termos e condições</a>
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-register">
+            <i class="fas fa-user-plus"></i> Criar Conta
+        </button>
+    </form>
+
+    <div class="login-link">
+        Já tem conta? <a href="/login">Fazer login aqui</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Validar passwords
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('As passwords não coincidem!');
+        }
+    });
+</script>
+</body>
+</html>

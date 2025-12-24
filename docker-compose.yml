@@ -1,0 +1,167 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: carpooling
+      POSTGRES_PASSWORD: carpooling123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    networks:
+      - carpooling-network
+
+  # Eureka Server (Service Discovery)
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - carpooling-network
+    depends_on:
+      - postgres
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - carpooling-network
+    depends_on:
+      - eureka-server
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/carpooling_auth
+      SPRING_DATASOURCE_USERNAME: carpooling
+      SPRING_DATASOURCE_PASSWORD: carpooling123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - carpooling-network
+    depends_on:
+      - postgres
+      - eureka-server
+
+  # Trip Service
+  trip-service:
+    build:
+      context: ./trip-service
+      dockerfile: Dockerfile
+    container_name: trip-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/carpooling_trips
+      SPRING_DATASOURCE_USERNAME: carpooling
+      SPRING_DATASOURCE_PASSWORD: carpooling123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - carpooling-network
+    depends_on:
+      - postgres
+      - eureka-server
+
+  # Vehicle Service
+  vehicle-service:
+    build:
+      context: ./vehicle-service
+      dockerfile: Dockerfile
+    container_name: vehicle-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/carpooling_vehicles
+      SPRING_DATASOURCE_USERNAME: carpooling
+      SPRING_DATASOURCE_PASSWORD: carpooling123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - carpooling-network
+    depends_on:
+      - postgres
+      - eureka-server
+
+  # Payment Service
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/carpooling_payments
+      SPRING_DATASOURCE_USERNAME: carpooling
+      SPRING_DATASOURCE_PASSWORD: carpooling123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - carpooling-network
+    depends_on:
+      - postgres
+      - eureka-server
+
+  # Location Service
+  location-service:
+    build:
+      context: ./location-service
+      dockerfile: Dockerfile
+    container_name: location-service
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - carpooling-network
+    depends_on:
+      - eureka-server
+
+  # Frontend Service
+  frontend-service:
+    build:
+      context: ./frontend-service
+      dockerfile: Dockerfile
+    container_name: frontend-service
+    ports:
+      - "3000:3000"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_APPLICATION_NAME: frontend-service
+    networks:
+      - carpooling-network
+    depends_on:
+      - eureka-server
+      - api-gateway
+networks:
+  carpooling-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

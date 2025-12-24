@@ -1,0 +1,532 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                   📋 DETALHES TÉCNICOS - ANÁLISE APROFUNDADA                    ║
+║                      Verificação de Código e Dependências                       ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+═════════════════════════════════════════════════════════════════════════════════
+                    ANÁLISE DE DEPENDÊNCIAS (pom.xml)
+═════════════════════════════════════════════════════════════════════════════════
+
+VERSÕES UTILIZADAS:
+───────────────────
+✅ Spring Boot: 3.2.0 (Última LTS 3.x)
+✅ Spring Cloud: 2023.0.0 (Compatible with Spring Boot 3.2)
+✅ Java: 17 (Target)
+✅ PostgreSQL Driver: Incluído nas dependências
+
+DEPENDÊNCIAS CRÍTICAS:
+──────────────────────
+
+Auth Service:
+  ✅ spring-boot-starter-web
+  ✅ spring-boot-starter-data-jpa
+  ✅ spring-boot-starter-security
+  ✅ postgresql driver
+  ✅ spring-boot-starter-validation
+  ❌ spring-cloud-starter-openfeign (FALTA)
+  ❌ io.jsonwebtoken:jjwt (FALTA - JWT library não especificada)
+
+Trip Service:
+  ✅ spring-boot-starter-web
+  ✅ spring-boot-starter-data-jpa
+  ✅ postgresql driver
+  ✅ spring-cloud-starter-openfeign (PRECISA VERIFICAR)
+  ✅ resilience4j-circuitbreaker
+  ❌ spring-boot-starter-security (FALTA para proteger endpoints)
+
+API Gateway:
+  ✅ spring-cloud-starter-gateway
+  ✅ spring-cloud-starter-netflix-eureka-client
+  ✅ spring-cloud-starter-circuitbreaker-resilience4j
+
+Frontend Service:
+  ✅ spring-boot-starter-web
+  ✅ spring-boot-starter-thymeleaf
+  ✅ spring-boot-starter-security (para session management)
+  ✅ spring-boot-devtools
+  ⚠️  spring-boot-starter-webflux (PRECISA VERIFICAR se é necessário)
+
+═════════════════════════════════════════════════════════════════════════════════
+                    PROBLEMAS IDENTIFICADOS NO CÓDIGO
+═════════════════════════════════════════════════════════════════════════════════
+
+PROBLEMA #1: Falta de JWT Parsing
+────────────────────────────────
+Localização: auth-service/pom.xml
+Descrição: JwtTokenProvider é mencionado mas JWT library não está nas dependências
+Impacto: 🔴 CRÍTICO - Authentication fará erro se não tiver dependência JWT
+Solução:
+  Adicionar ao auth-service/pom.xml:
+  <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+      <version>0.12.3</version>
+  </dependency>
+  <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <version>0.12.3</version>
+      <scope>runtime</scope>
+  </dependency>
+  <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <version>0.12.3</version>
+      <scope>runtime</scope>
+  </dependency>
+
+PROBLEMA #2: Falta de Spring Security em Trip Service
+───────────────────────────────────────────────────────
+Localização: trip-service/pom.xml
+Descrição: Endpoints REST não estão protegidos com Spring Security
+Impacto: 🟡 IMPORTANTE - Qualquer pessoa pode criar/deletar viagens
+Solução:
+  Adicionar ao trip-service/pom.xml:
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+  </dependency>
+
+PROBLEMA #3: Falta de Swagger/OpenAPI
+──────────────────────────────────────
+Localização: Todos os serviços (springdoc.api-docs.path está configurado)
+Descrição: Configuração exists mas dependency não está no pom.xml
+Impacto: 🟡 IMPORTANTE - Swagger UI não funciona
+Solução:
+  Adicionar a todos os serviços com REST APIs:
+  <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.0.2</version>
+  </dependency>
+
+PROBLEMA #4: Falta de OpenFeign no Frontend
+────────────────────────────────────────────
+Localização: frontend-service/pom.xml
+Descrição: Usa WebClient em vez de OpenFeign
+Impacto: 🟡 MÉDIO - Funcionará mas não é padrão para microserviços
+Solução:
+  Frontend uses WebClient (OK for UI layer)
+  MAS backend services should use OpenFeign
+
+PROBLEMA #5: Falta de Error Handling Global
+─────────────────────────────────────────────
+Localização: Todos os controllers
+Descrição: Sem @ControllerAdvice ou @RestControllerAdvice
+Impacto: 🟡 IMPORTANTE - Erros não tratados adequadamente
+Impacto na API: Respostas inconsistentes (alguns 500, alguns 400)
+Solução:
+  Criar GlobalExceptionHandler.java em cada serviço:
+  @RestControllerAdvice
+  public class GlobalExceptionHandler {
+      @ExceptionHandler(EntityNotFoundException.class)
+      public ResponseEntity<ApiError> handleNotFound(EntityNotFoundException e) {
+          return ResponseEntity.status(404).body(new ApiError(...));
+      }
+  }
+
+PROBLEMA #6: Falta de Logging Estruturado
+───────────────────────────────────────────
+Localização: Services e Controllers
+Descrição: Sem @Slf4j ou logging explícito
+Impacto: 🟡 IMPORTANTE - Difícil debugar em produção
+Solução:
+  Adicionar @Slf4j do Lombok a todos os Services
+  Adicionar log.info(), log.debug(), log.error() nos pontos críticos
+
+PROBLEMA #7: Falta de Validação em DTOs
+────────────────────────────────────────
+Localização: LoginRequest, RegisterRequest, CreateTripRequest
+Descrição: Sem @NotNull, @NotBlank, @Email etc.
+Impacto: 🟡 IMPORTANTE - Validação inadequada
+Solução:
+  Adicionar Bean Validation annotations:
+  @Data
+  public class LoginRequest {
+      @NotBlank(message = "Email is required")
+      @Email(message = "Email must be valid")
+      private String email;
+      
+      @NotBlank(message = "Password is required")
+      @Size(min = 6, message = "Password must be at least 6 characters")
+      private String password;
+  }
+
+PROBLEMA #8: Falta de Transações
+────────────────────────────────
+Localização: Services críticos
+Descrição: Sem @Transactional em métodos que modificam dados
+Impacto: 🟡 IMPORTANTE - Risco de inconsistência de dados
+Solução:
+  Adicionar @Transactional a métodos que fazem CRUD:
+  @Service
+  @Transactional
+  public class TripService {
+      public TripDTO createTrip(CreateTripRequest request) {
+          ...
+      }
+  }
+
+═════════════════════════════════════════════════════════════════════════════════
+                    ANÁLISE DE ENDPOINTS E RUTAS
+═════════════════════════════════════════════════════════════════════════════════
+
+API GATEWAY ROUTES (application.yml):
+────────────────────────────────────
+
+✅ /api/auth/** → auth-service (8081)
+✅ /api/trips/** → trip-service (8082)
+❌ /api/vehicles/** → vehicle-service (NÃO EXISTE)
+❌ /api/locations/** → location-service (NÃO EXISTE)
+❌ /api/payments/** → payment-service (NÃO EXISTE)
+❌ /api/admin/** → admin-service (NÃO EXISTE)
+
+Recomendação: Comentar ou remover rotas para serviços inexistentes
+Caso contrário: Erros 503 Service Unavailable
+
+AUTH SERVICE ENDPOINTS:
+──────────────────────
+
+✅ POST /api/auth/login
+   └─ Entrada: LoginRequest {email, password}
+   └─ Saída: LoginResponse {token, userId, email}
+   └─ Status: 200 OK
+
+✅ POST /api/auth/register
+   └─ Entrada: RegisterRequest {...}
+   └─ Saída: UserDTO {...}
+   └─ Status: 201 CREATED
+
+✅ GET /api/auth/user/{id}
+   └─ Requer: Token JWT válido
+   └─ Saída: UserDTO {...}
+   └─ Status: 200 OK
+
+✅ GET /api/auth/user/email/{email}
+   └─ Requer: Token JWT válido
+   └─ Saída: UserDTO {...}
+   └─ Status: 200 OK
+
+✅ PUT /api/auth/user/{id}
+   └─ Requer: Token JWT válido + User ID match
+   └─ Entrada: UserDTO {...}
+   └─ Saída: UserDTO {...}
+   └─ Status: 200 OK
+
+✅ DELETE /api/auth/user/{id}
+   └─ Requer: Token JWT válido + Admin role
+   └─ Status: 204 NO CONTENT
+
+TRIP SERVICE ENDPOINTS:
+──────────────────────
+
+✅ POST /api/trips
+   └─ Entrada: CreateTripRequest {...}
+   └─ Saída: TripDTO {...}
+   └─ Status: 201 CREATED
+
+✅ GET /api/trips
+   └─ Saída: List<TripDTO>
+   └─ Status: 200 OK
+
+✅ GET /api/trips/{id}
+   └─ Saída: TripDTO {...}
+   └─ Status: 200 OK
+
+✅ GET /api/trips/driver/{driverId}
+   └─ Saída: List<TripDTO>
+   └─ Status: 200 OK
+
+✅ GET /api/trips/search?departure=...&destination=...&departureTime=...
+   └─ Saída: List<TripDTO> (filtrados)
+   └─ Status: 200 OK
+
+✅ GET /api/trips/available
+   └─ Saída: List<TripDTO> (status=OPEN)
+   └─ Status: 200 OK
+
+✅ PUT /api/trips/{id}/status?status=IN_PROGRESS
+   └─ Entrada: Path variable + Query param
+   └─ Saída: TripDTO {...}
+   └─ Status: 200 OK
+
+✅ POST /api/trips/reservations
+   └─ Entrada: CreateReservationRequest {...}
+   └─ Saída: ReservationDTO {...}
+   └─ Status: 201 CREATED
+
+✅ GET /api/trips/reservations/passenger/{passengerId}
+   └─ Saída: List<ReservationDTO>
+   └─ Status: 200 OK
+
+✅ GET /api/trips/{tripId}/reservations
+   └─ Saída: List<ReservationDTO>
+   └─ Status: 200 OK
+
+✅ PUT /api/trips/reservations/{id}/status?status=CONFIRMED
+   └─ Entrada: Path variable + Query param
+   └─ Saída: ReservationDTO {...}
+   └─ Status: 200 OK
+
+FRONTEND SERVICE ENDPOINTS (MVC):
+──────────────────────────────────
+
+✅ GET / (Home page)
+✅ GET /login (Login form)
+✅ POST /login (Process login)
+✅ GET /register (Register form)
+✅ POST /register (Process register)
+✅ GET /logout (Logout)
+✅ GET /dashboard (Dashboard)
+✅ GET /profile (User profile)
+✅ GET /trips/create (Create trip form)
+✅ POST /trips/create (Process create trip)
+✅ GET /trips/search (Search trips)
+✅ POST /trips/reserve (Process reserve)
+✅ GET /trips/my-trips (My trips)
+✅ GET /trips/my-reservations (My reservations)
+
+═════════════════════════════════════════════════════════════════════════════════
+                    FLUXOS DE NEGÓCIO IDENTIFICADOS
+═════════════════════════════════════════════════════════════════════════════════
+
+FLUXO 1: Registo e Login
+────────────────────────
+1. Utilizador acessa http://localhost:3000
+2. Frontend exibe home page (público)
+3. Utilizador clica "Registar"
+4. Frontend exibe formulário (auth/register.html)
+5. Utilizador preenche dados e submete
+6. Frontend POST para http://localhost:3000/register
+7. AuthController recebe dados
+8. AuthService chama POST http://localhost:8080/api/auth/register
+9. API Gateway roteia para auth-service
+10. AuthService salva User no PostgreSQL
+11. Frontend redireciona para /dashboard
+12. Frontend exibe dashboard protegido (requer login)
+
+Status: ✅ Implementado (MAS sem segurança CORS)
+
+FLUXO 2: Pesquisa e Reserva de Viagem
+──────────────────────────────────────
+1. Utilizador autenticado acessa /trips/search
+2. Frontend exibe formulário com filtros
+3. Utilizador insere origem, destino, data
+4. Frontend POST para http://localhost:3000/trips/search
+5. TripController recebe filtros
+6. TripService chama GET http://localhost:8080/api/trips/search?...
+7. API Gateway roteia para trip-service
+8. TripService retorna lista de viagens compatíveis
+9. Frontend renderiza trips/search-trips.html com resultados
+10. Utilizador clica "Reservar" numa viagem
+11. Frontend POST para http://localhost:3000/trips/reserve
+12. TripController recebe CreateReservationRequest
+13. TripService chama POST http://localhost:8080/api/trips/reservations
+14. Trip Service salva Reservation no PostgreSQL
+15. Frontend redireciona para /trips/my-reservations
+
+Status: ✅ Implementado (MAS sem integração payment-service)
+
+FLUXO 3: Criar Viagem
+─────────────────────
+1. Utilizador autenticado (DRIVER) acessa /trips/create
+2. Frontend exibe formulário (trips/create-trip.html)
+3. Utilizador preenche: origem, destino, data, lugares, preço
+4. Frontend POST para http://localhost:3000/trips/create
+5. TripController recebe CreateTripRequest
+6. TripService chama POST http://localhost:8080/api/trips
+7. Trip Service salva Trip no PostgreSQL
+8. Trip Service pode chamar Vehicle Service para validar veículo (NÃO IMPLEMENTADO)
+9. Frontend redireciona para /trips/my-trips
+10. Frontend lista viagens criadas pelo utilizador
+
+Status: ✅ Implementado (MAS sem validação de veículos)
+
+═════════════════════════════════════════════════════════════════════════════════
+                    TESTES E VALIDAÇÃO SUGERIDOS
+═════════════════════════════════════════════════════════════════════════════════
+
+TESTES QUE DEVERIAM EXISTIR:
+────────────────────────────
+
+1. Auth Service Tests (JUnit 5 + Mockito)
+   ├─ should_register_new_user_successfully()
+   ├─ should_fail_register_with_existing_email()
+   ├─ should_login_with_valid_credentials()
+   ├─ should_fail_login_with_invalid_password()
+   └─ should_update_user_profile()
+
+2. Trip Service Tests
+   ├─ should_create_trip_successfully()
+   ├─ should_search_trips_by_criteria()
+   ├─ should_make_reservation_successfully()
+   ├─ should_fail_reservation_insufficient_seats()
+   └─ should_update_trip_status()
+
+3. Frontend Controller Tests
+   ├─ should_redirect_to_login_when_not_authenticated()
+   ├─ should_display_dashboard_when_authenticated()
+   ├─ should_create_trip_form_pre_filled()
+   └─ should_search_trips_and_display_results()
+
+4. Integration Tests (Spring Boot Test)
+   ├─ should_end_to_end_register_and_login()
+   ├─ should_end_to_end_create_and_search_trip()
+   ├─ should_end_to_end_create_reservation()
+   └─ Testar Docker Compose com TestContainers
+
+═════════════════════════════════════════════════════════════════════════════════
+                    COMPARAÇÃO COM REQUISITOS
+═════════════════════════════════════════════════════════════════════════════════
+
+CONTROLADORES MVC E THYMELEAF (Requisito: 3v):
+───────────────────────────────────────────────
+Avaliação Estimada: 3/3 ✅
+
+Evidência:
+├─ AuthController (GET /login, POST /login, GET /register, POST /register, GET /logout)
+├─ HomeController (GET /, GET /dashboard, GET /profile)
+├─ TripController (GET /trips/create, POST /trips/create, GET /trips/search, etc.)
+└─ 10 Templates Thymeleaf (~2.500 linhas)
+    ├─ index.html, layout.html, auth/login.html, auth/register.html
+    ├─ dashboard/dashboard.html, dashboard/profile.html
+    ├─ trips/search-trips.html, trips/create-trip.html
+    ├─ trips/my-trips.html, trips/my-reservations.html
+
+ARQUITETURA MICROSERVIÇOS (Requisito: 4v):
+────────────────────────────────────────────
+Avaliação Estimada: 3/4 🟡
+
+Evidência:
+✅ Eureka Server (Service Discovery)
+✅ API Gateway (Roteamento dinâmico)
+✅ Auth Service (Autenticação completa)
+✅ Trip Service (Viagens completo)
+❌ Vehicle Service (NÃO IMPLEMENTADO)
+❌ Location Service (NÃO IMPLEMENTADO)
+❌ Payment Service (NÃO IMPLEMENTADO)
+❌ Admin Service (NÃO IMPLEMENTADO)
+
+Recomendação: Implementar pelo menos Vehicle Service para obter 4/4
+
+LÓGICA DE NEGÓCIO E SIMULAÇÕES (Requisito: 3.5v):
+──────────────────────────────────────────────────
+Avaliação Estimada: 2.5/3.5 🟡
+
+Implementado:
+✅ Criação de viagens
+✅ Pesquisa de viagens
+✅ Reserva de viagens
+✅ Cálculo básico de custos
+✅ Gestão de utilizadores
+
+Falta:
+❌ Car Sharing (aluguel de veículos)
+❌ Cálculo avançado de custos (divisão por passageiro)
+❌ GPS/Localização
+❌ Pagamentos
+
+BASE DE DADOS E REPOSITÓRIOS (Requisito: 2.5v):
+────────────────────────────────────────────────
+Avaliação Estimada: 2/2.5 🟡
+
+Implementado:
+✅ PostgreSQL containerizado
+✅ 2 schemas (carpooling_auth, carpooling_trips)
+✅ JPA repositories
+✅ Entidades mapeadas
+
+Falta:
+❌ 3 schemas adicionais (vehicles, payments, admin)
+❌ SQL scripts para criar tabelas iniciais
+❌ Índices de performance
+
+SEGURANÇA MVC E REST (Requisito: 1.5v):
+────────────────────────────────────────
+Avaliação Estimada: 0.8/1.5 🟡
+
+Implementado:
+✅ Spring Security em auth-service
+✅ JWT token generation
+✅ BCrypt password encoding
+✅ Session management em frontend
+
+Falta:
+❌ CORS configuration
+❌ Rate limiting
+❌ SQL injection prevention validation
+❌ Password complexity rules
+❌ Spring Security OAuth2
+
+CONTAINERIZAÇÃO (Requisito: 1v):
+─────────────────────────────────
+Avaliação Estimada: 0.5/1 🟡
+
+Implementado:
+✅ Dockerfile para cada serviço
+✅ docker-compose.yml com orquestração
+✅ Volumes para persistência
+
+Falta:
+❌ Teste prático do docker-compose up
+❌ Health checks nos containers
+❌ Networking validation
+
+OUTROS ASPETOS VALORIZÁVEIS (Requisito: até 2.5v):
+───────────────────────────────────────────────────
+Avaliação Estimada: 1/2.5 🟡
+
+Implementado:
+✅ Postman Collection (17 endpoints)
+✅ Circuit Breaker em trip-service
+✅ Documentação completa (9 ficheiros)
+✅ README, ROADMAP, TEAM_GUIDE
+
+Falta:
+❌ Testes unitários/integração
+❌ Swagger/OpenAPI completo com annotations
+❌ Logging estruturado (SLF4J com patterns)
+❌ Monitoramento (Spring Boot Actuator expandido)
+❌ CI/CD Pipeline
+
+═════════════════════════════════════════════════════════════════════════════════
+                              CONCLUSÃO FINAL
+═════════════════════════════════════════════════════════════════════════════════
+
+STATUS GERAL: 60% COMPLETO
+
+PONTOS FORTES:
+──────────────
+✅ Arquitetura de microserviços bem estruturada
+✅ Frontend responsivo com Bootstrap 5
+✅ Autenticação JWT implementada
+✅ PostgreSQL com JPA repositories
+✅ Spring Cloud Eureka e Gateway funcionais
+✅ Documentação abrangente
+✅ Circuit Breaker implementado (Resilience4j)
+✅ Docker setup pronto
+
+PONTOS A MELHORAR:
+──────────────────
+❌ 3 microserviços principais faltando (vehicle, location, payment)
+❌ Falta de testes unitários/integração
+❌ OpenFeign não implementado entre serviços
+❌ Error handling global incompleto
+❌ Logging estruturado ausente
+❌ Validação em DTOs incompleta
+❌ CORS não configurado
+❌ Docker não testado end-to-end
+
+RECOMENDAÇÕES FINAIS:
+─────────────────────
+1. Implementar vehicle-service (3-4 horas)
+2. Implementar payment-service (3-4 horas)
+3. Implementar location-service (3-4 horas)
+4. Adicionar testes básicos (2-3 horas)
+5. Completar documentação Swagger (1-2 horas)
+6. Testar docker-compose (1-2 horas)
+
+Com estas melhorias, projeto atingirá ~17-18/20 valores (85%).
+
+═════════════════════════════════════════════════════════════════════════════════
+FIM DA ANÁLISE DETALHADA
