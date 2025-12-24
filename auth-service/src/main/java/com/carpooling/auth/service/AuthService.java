@@ -112,7 +112,7 @@ public class AuthService {
                 user.getEmail(),
                 user.getFullName(),
                 user.getPhoneNumber(),
-                user.getRole().name(),
+                user.getRoles().stream().findFirst().map(UserRole::name).orElse(null),
                 user.getRating(),
                 user.getIsActive()
         );
