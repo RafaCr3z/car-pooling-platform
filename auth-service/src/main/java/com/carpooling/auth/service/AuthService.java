@@ -62,7 +62,6 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .phoneNumber(request.getPhoneNumber())
-                .role(role)
                 .roles(Collections.singleton(role))
                 .rating(5.0)
                 .isActive(true)
