@@ -153,6 +153,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       SPRING_APPLICATION_NAME: frontend-service
+      API_GATEWAY_URL: http://api-gateway:8080
     networks:
       - carpooling-network
     depends_on:

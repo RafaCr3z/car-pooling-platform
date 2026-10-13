@@ -35,7 +35,7 @@ public class TripService {
             );
 
             webClient.post()
-                    .uri("http://localhost:8080/api/trips")
+                    .uri("/api/trips")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)
@@ -58,7 +58,7 @@ public class TripService {
         try {
             String response = webClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("http://localhost:8080/api/trips/search")
+                            .path("/api/trips/search")
                             .queryParam("origin", origin)
                             .queryParam("destination", destination)
                             .build())
@@ -98,7 +98,7 @@ public class TripService {
     public List<TripDTO> getMyTrips(String token) {
         try {
             String response = webClient.get()
-                    .uri("http://localhost:8080/api/trips")
+                    .uri("/api/trips")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                     .retrieve()
                     .bodyToMono(String.class)
@@ -134,7 +134,7 @@ public class TripService {
     public List<ReservationDTO> getMyReservations(String token) {
         try {
             String response = webClient.get()
-                    .uri("http://localhost:8080/api/trips/reservations")
+                    .uri("/api/trips/reservations")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                     .retrieve()
                     .bodyToMono(String.class)
@@ -173,7 +173,7 @@ public class TripService {
             );
 
             webClient.post()
-                    .uri("http://localhost:8080/api/trips/reservations")
+                    .uri("/api/trips/reservations")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)

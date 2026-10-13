@@ -1,10 +1,4 @@
-FROM maven:3.8.1-openjdk-17 as builder
-WORKDIR /build
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests
-
-FROM openjdk:17-jdk-slim
-WORKDIR /app
-COPY --from=builder /build/target/location-service-1.0.0.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+FROM eclipse-temurin:17-jdk-alpine
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} location-service.jar
+ENTRYPOINT ["java","-jar","/location-service.jar"]

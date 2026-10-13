@@ -44,6 +44,7 @@ public class TripService {
                 .totalCost(request.getTotalCost())
                 .costPerPassenger(costPerPassenger)
                 .distance(request.getDistance())
+                .occupiedSeats(0)
                 .status(TripStatus.OPEN)
                 .build();
 
@@ -62,8 +63,8 @@ public class TripService {
     }
 
     @Transactional(readOnly = true)
-    public List<TripDTO> getAllTripsFromDB() {
-        log.warn("Circuit breaker fallback triggered for getAllTrips");
+    public List<TripDTO> getAllTripsFromDB(Throwable t) {
+        log.warn("Circuit breaker fallback triggered for getAllTrips: {}", t != null ? t.getMessage() : "unknown");
         return tripRepository.findAll()
                 .stream()
                 .map(this::mapToDTO)

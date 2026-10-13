@@ -10,44 +10,26 @@ spring:
           uri: lb://auth-service
           predicates:
             - Path=/api/auth/**
-          filters:
-            - StripPrefix=2
 
         - id: trip-service
           uri: lb://trip-service
           predicates:
             - Path=/api/trips/**
-          filters:
-            - StripPrefix=2
 
         - id: vehicle-service
           uri: lb://vehicle-service
           predicates:
             - Path=/api/vehicles/**
-          filters:
-            - StripPrefix=2
 
         - id: location-service
           uri: lb://location-service
           predicates:
             - Path=/api/locations/**
-          filters:
-            - StripPrefix=2
 
         - id: payment-service
           uri: lb://payment-service
           predicates:
             - Path=/api/payments/**
-          filters:
-            - StripPrefix=2
-
-        # Admin Service - SERÁ HABILITADO APÓS IMPLEMENTAÇÃO
-        # - id: admin-service
-        #   uri: lb://admin-service
-        #   predicates:
-        #     - Path=/api/admin/**
-        #   filters:
-        #     - StripPrefix=2
 
 server:
   port: 8080

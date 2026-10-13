@@ -37,6 +37,7 @@ public class Trip {
     private Integer availableSeats;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer occupiedSeats = 0;
 
     @Column(nullable = false)
@@ -50,6 +51,7 @@ public class Trip {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private TripStatus status = TripStatus.OPEN;
 
     @Column(name = "created_at", nullable = false, updatable = false)

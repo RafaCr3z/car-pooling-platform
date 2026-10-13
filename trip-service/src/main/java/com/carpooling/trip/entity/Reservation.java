@@ -29,6 +29,7 @@ public class Reservation {
     private Long passengerId;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer numberOfSeats = 1;
 
     @Column(nullable = false)
@@ -36,6 +37,7 @@ public class Reservation {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private ReservationStatus status = ReservationStatus.PENDING;
 
     @Column(name = "created_at", nullable = false, updatable = false)

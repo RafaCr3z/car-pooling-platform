@@ -26,7 +26,7 @@ public class AuthService {
             );
 
             String response = webClient.post()
-                    .uri("http://localhost:8080/api/auth/login")
+                    .uri("/api/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)
                     .retrieve()
@@ -59,7 +59,7 @@ public class AuthService {
             );
 
             webClient.post()
-                    .uri("http://localhost:8080/api/auth/register")
+                    .uri("/api/auth/register")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)
                     .retrieve()
