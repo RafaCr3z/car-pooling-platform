@@ -10,7 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -24,6 +26,17 @@ public class PaymentController {
     public ResponseEntity<PaymentDTO> createPayment(@Valid @RequestBody CreatePaymentRequest request) {
         PaymentDTO payment = paymentService.createPayment(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(payment);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PaymentDTO>> getAllPayments() {
+        return ResponseEntity.ok(paymentService.getAllPayments());
+    }
+
+    @GetMapping("/total")
+    public ResponseEntity<Map<String, Object>> getTotalTransacted() {
+        BigDecimal total = paymentService.getTotalTransactedAmount();
+        return ResponseEntity.ok(Map.of("totalAmount", total));
     }
     
     @GetMapping("/{id}")

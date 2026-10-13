@@ -3,324 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Pooling - Home</title>
+    <title>Car Pooling PT - Mobilidade Sustentável</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --success-color: #28a745;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: #f8fafc;
         }
-
-        .navbar {
-            background: linear-gradient(135deg, var(--primary-color), #0056b3);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-            color: white !important;
-        }
-
         .hero {
-            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%);
             color: white;
-            padding: 100px 0;
+            padding: 90px 0;
             text-align: center;
-            margin-bottom: 50px;
         }
-
         .hero h1 {
-            font-size: 3.5rem;
-            font-weight: bold;
-            margin-bottom: 20px;
+            font-size: 3.2rem;
+            font-weight: 800;
         }
-
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 30px;
-        }
-
-        .btn-custom {
-            padding: 12px 30px;
-            font-size: 1.1rem;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        .btn-custom:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
         .feature-card {
             border: none;
-            border-radius: 15px;
+            border-radius: 16px;
             padding: 30px;
             text-align: center;
-            transition: transform 0.3s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.25s;
+            height: 100%;
         }
-
         .feature-card:hover {
-            transform: translateY(-10px);
+            transform: translateY(-6px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-
-        .feature-icon {
-            font-size: 3rem;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-
-        footer {
-            background-color: #343a40;
+        .step-circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #0284c7);
             color: white;
-            padding: 30px 0;
-            margin-top: 50px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 16px;
         }
     </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-lg navbar-dark py-2" style="background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%);">
     <div class="container">
-        <a class="navbar-brand" href="/">
-            <i class="fas fa-car"></i> Car Pooling
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/register"><i class="fas fa-user-plus"></i> Registar</a>
-                </li>
-            </ul>
+        <a class="navbar-brand fw-bold" href="/"><i class="fas fa-car-side text-warning me-2"></i>CarPooling PT</a>
+        <div class="ms-auto d-flex align-items-center">
+            <th:block th:if="${session.email}">
+                <a href="/dashboard" class="btn btn-outline-light btn-sm me-2"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a>
+                <a href="/logout" class="btn btn-outline-danger btn-sm"><i class="fas fa-sign-out-alt me-1"></i>Sair</a>
+            </th:block>
+            <th:block th:unless="${session.email}">
+                <a href="/login" class="btn btn-outline-light btn-sm me-2"><i class="fas fa-sign-in-alt me-1"></i>Entrar</a>
+                <a href="/register" class="btn btn-warning btn-sm text-dark fw-bold"><i class="fas fa-user-plus me-1"></i>Registar</a>
+            </th:block>
         </div>
     </div>
 </nav>
 
-<!-- Hero Section -->
-<section class="hero">
+<!-- Hero -->
+<section class="hero shadow-sm">
     <div class="container">
-        <h1><i class="fas fa-car-side"></i> Bem-vindo ao Car Pooling</h1>
-        <p>Partilhe viagens, economize combustível e ajude o ambiente!</p>
-        <a href="/login" class="btn btn-light btn-custom me-2"><i class="fas fa-sign-in-alt"></i> Fazer Login</a>
-        <a href="/register" class="btn btn-outline-light btn-custom"><i class="fas fa-user-plus"></i> Criar Conta</a>
-    </div>
-</section>
-
-<!-- Features Section -->
-<section class="features py-5">
-    <div class="container">
-        <h2 style="text-align: center; margin-bottom: 50px; font-weight: bold;">
-            Por que utilizar Car Pooling?
-        </h2>
-        
-        <div class="row">
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-money-bill-wave"></i>
-                    </div>
-                    <h4>Economize Dinheiro</h4>
-                    <p>Divida os custos de combustível com outros passageiros. Pode economizar até 50% nos seus gastos de viagem.</p>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-leaf"></i>
-                    </div>
-                    <h4>Ambiente Sustentável</h4>
-                    <p>Reduz a emissão de carbono. Cada viagem partilhada é um passo para um planeta mais verde.</p>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h4>Conhecer Pessoas</h4>
-                    <p>Encontre novos amigos e companheiros de viagem. Construa uma comunidade local de confiança.</p>
-                </div>
-            </div>
+        <div class="d-inline-flex align-items-center bg-white bg-opacity-20 px-3 py-1 rounded-pill mb-3">
+            <i class="fas fa-leaf text-warning me-2"></i>
+            <span class="small fw-semibold">Mobilidade Sustentável em Portugal &bull; Redução Ativa de CO2</span>
         </div>
-
-        <div class="row mt-5">
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <h4>Economize Tempo</h4>
-                    <p>Use as faixas de trânsito para veículos de ocupação múltipla. Chegue mais rápido ao destino.</p>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h4>Seguro e Confiável</h4>
-                    <p>Sistema de avaliações e perfis verificados para garantir a segurança de todos os utilizadores.</p>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-mobile-alt"></i>
-                    </div>
-                    <h4>Fácil de Usar</h4>
-                    <p>Interface simples e intuitiva. Encontre e reserve uma viagem em poucos cliques.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- How It Works Section -->
-<section class="bg-light py-5">
-    <div class="container">
-        <h2 style="text-align: center; margin-bottom: 50px; font-weight: bold;">
-            Como Funciona?
-        </h2>
-
-        <div class="row">
-            <div class="col-md-3 text-center">
-                <div style="
-                    width: 80px; 
-                    height: 80px; 
-                    background: linear-gradient(135deg, #007bff, #0056b3); 
-                    color: white;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 2rem;
-                    margin: 0 auto 20px;
-                ">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-                <h5>1. Registar-se</h5>
-                <p>Crie uma conta gratuita em segundos</p>
-            </div>
-
-            <div class="col-md-3 text-center">
-                <div style="
-                    width: 80px; 
-                    height: 80px; 
-                    background: linear-gradient(135deg, #007bff, #0056b3); 
-                    color: white;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 2rem;
-                    margin: 0 auto 20px;
-                ">
-                    <i class="fas fa-search"></i>
-                </div>
-                <h5>2. Pesquisar</h5>
-                <p>Encontre viagens que correspondem aos seus planos</p>
-            </div>
-
-            <div class="col-md-3 text-center">
-                <div style="
-                    width: 80px; 
-                    height: 80px; 
-                    background: linear-gradient(135deg, #007bff, #0056b3); 
-                    color: white;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 2rem;
-                    margin: 0 auto 20px;
-                ">
-                    <i class="fas fa-check"></i>
-                </div>
-                <h5>3. Reservar</h5>
-                <p>Reserve o seu lugar com alguns cliques</p>
-            </div>
-
-            <div class="col-md-3 text-center">
-                <div style="
-                    width: 80px; 
-                    height: 80px; 
-                    background: linear-gradient(135deg, #007bff, #0056b3); 
-                    color: white;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 2rem;
-                    margin: 0 auto 20px;
-                ">
-                    <i class="fas fa-car"></i>
-                </div>
-                <h5>4. Viajar</h5>
-                <p>Aproveite a viagem e conheça pessoas novas</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Call to Action -->
-<section class="bg-primary text-white py-5">
-    <div class="container text-center">
-        <h2 style="font-weight: bold; margin-bottom: 20px;">Pronto para começar?</h2>
-        <p style="font-size: 1.2rem; margin-bottom: 30px;">
-            Junte-se a milhares de utilizadores que já estão economizando e cuidando do ambiente.
+        <h1>Partilha Viagens, Poupa Custos,<br>Protege o Planeta.</h1>
+        <p class="lead opacity-90 mx-auto mt-3 mb-4" style="max-width: 680px;">
+            A plataforma colaborativa de car pooling para ligar cidades de Portugal. Divide despesas de combustível e portagens de forma justa e transparente.
         </p>
-        <a href="/register" class="btn btn-light btn-lg"><i class="fas fa-user-plus"></i> Criar Conta Agora</a>
+
+        <div class="d-flex justify-content-center gap-2">
+            <th:block th:if="${session.email}">
+                <a href="/dashboard" class="btn btn-light btn-lg px-4 fw-bold shadow-sm"><i class="fas fa-tachometer-alt me-2 text-primary"></i>Ir para o Dashboard</a>
+                <a href="/trips/search" class="btn btn-outline-light btn-lg px-4 fw-bold"><i class="fas fa-search me-2"></i>Procurar Boleias</a>
+            </th:block>
+            <th:block th:unless="${session.email}">
+                <a href="/login" class="btn btn-light btn-lg px-4 fw-bold shadow-sm"><i class="fas fa-sign-in-alt me-2 text-primary"></i>Iniciar Sessão</a>
+                <a href="/trips/search" class="btn btn-outline-light btn-lg px-4 fw-bold"><i class="fas fa-search me-2"></i>Ver Boleias Disponíveis</a>
+            </th:block>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-dark">Porquê Escolher o Car Pooling PT?</h2>
+            <p class="text-muted">Projetado com arquitetura de microsserviços distribuídos e eventos assíncronos.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex p-3 mb-3">
+                        <i class="fas fa-euro-sign fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold">Divisão Justa de Custos</h5>
+                    <p class="text-muted small">Cálculo exato de combustível e portagens dividido equitativamente por cada lugar ocupado na viatura.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex p-3 mb-3">
+                        <i class="fas fa-leaf fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold">Impacto Ambiental Positivo</h5>
+                    <p class="text-muted small">Métrica automática de poupança de CO2 (~0.115 kg CO2 por km partilhado) com equivalência em árvores salvas.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="rounded-circle bg-info bg-opacity-10 text-info d-inline-flex p-3 mb-3">
+                        <i class="fas fa-map-marked-alt fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold">Mapas & Rotas Interativas</h5>
+                    <p class="text-muted small">Visualização de trajetos e marcadores geográficos com OpenStreetMap e Leaflet.js entre cidades nacionais.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-inline-flex p-3 mb-3">
+                        <i class="fas fa-bell fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold">Notificações em Tempo Real</h5>
+                    <p class="text-muted small">Event-driven architecture via RabbitMQ avisando condutores e passageiros de confirmações e viagens iniciadas.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex p-3 mb-3">
+                        <i class="fas fa-shield-alt fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold">Moderação & Comunidade Segura</h5>
+                    <p class="text-muted small">Avaliações 1 a 5 estrelas e painel administrativo com auditoria para suspensão e moderação de conduta.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="rounded-circle bg-secondary bg-opacity-10 text-dark d-inline-flex p-3 mb-3">
+                        <i class="fas fa-bolt fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold">Resiliência & Alta Disponibilidade</h5>
+                    <p class="text-muted small">Circuit Breakers com Resilience4j garantindo resposta graciosa mesmo sob falhas de microsserviços.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5 bg-white border-top">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-dark">Como Funciona em 4 Passos</h2>
+            <p class="text-muted">Do registo à viagem partilhada em poucos minutos.</p>
+        </div>
+
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="step-circle">1</div>
+                <h6 class="fw-bold">Registar / Entrar</h6>
+                <p class="text-muted small">Cria a tua conta como Passageiro ou Condutor.</p>
+            </div>
+            <div class="col-md-3">
+                <div class="step-circle">2</div>
+                <h6 class="fw-bold">Pesquisar ou Publicar</h6>
+                <p class="text-muted small">Encontra viagens ou disponibiliza os lugares livres do teu carro.</p>
+            </div>
+            <div class="col-md-3">
+                <div class="step-circle">3</div>
+                <h6 class="fw-bold">Confirmação do Condutor</h6>
+                <p class="text-muted small">O condutor aceita o passageiro e o lugar fica garantido.</p>
+            </div>
+            <div class="col-md-3">
+                <div class="step-circle">4</div>
+                <h6 class="fw-bold">Viajar & Poupar</h6>
+                <p class="text-muted small">Partilhem a viagem, despesas e poupem emissões de CO2.</p>
+            </div>
+        </div>
     </div>
 </section>
 
 <!-- Footer -->
-<footer>
+<footer style="background-color: #0f172a; color: #94a3b8; padding: 36px 0;" class="text-center">
     <div class="container">
-        <div class="row">
-            <div class="col-md-4">
-                <h5><i class="fas fa-car"></i> Car Pooling</h5>
-                <p>Partilhe viagens e economize combustível</p>
-            </div>
-            <div class="col-md-4">
-                <h5>Links</h5>
-                <ul style="list-style: none; padding: 0;">
-                    <li><a href="/" style="color: white; text-decoration: none;">Home</a></li>
-                    <li><a href="/login" style="color: white; text-decoration: none;">Login</a></li>
-                </ul>
-            </div>
-            <div class="col-md-4">
-                <h5>Contacto</h5>
-                <p>
-                    <i class="fas fa-envelope"></i> info@carpooling.pt<br>
-                    <i class="fas fa-phone"></i> +351 XXX XXX XXX
-                </p>
-            </div>
-        </div>
-        <hr style="border-color: #555;">
-        <p>&copy; 2024 Car Pooling. Todos os direitos reservados.</p>
+        <p class="mb-1 fw-bold text-white"><i class="fas fa-car-side text-warning me-1"></i> Car Pooling PT</p>
+        <p class="small mb-0">Projeto Desenvolvido para Aplicações Distribuídas 2025/2026 &bull; EST-IPCB</p>
     </div>
 </footer>
 

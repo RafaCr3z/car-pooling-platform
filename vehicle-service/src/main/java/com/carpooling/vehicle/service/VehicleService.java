@@ -25,19 +25,33 @@ public class VehicleService {
     private final VehicleRepository vehicleRepository;
     
     public VehicleDTO createVehicle(CreateVehicleRequest request) {
-        Vehicle vehicle = new Vehicle();
-        vehicle.setLicensePlate(request.getLicensePlate());
-        vehicle.setBrand(request.getBrand());
-        vehicle.setModel(request.getModel());
-        vehicle.setYear(request.getYear());
-        vehicle.setType(VehicleType.valueOf(request.getType().toUpperCase()));
-        vehicle.setOwnerId(request.getOwnerId());
-        vehicle.setPricePerHour(request.getPricePerHour());
-        vehicle.setPricePerKm(request.getPricePerKm());
-        vehicle.setLocation(request.getLocation());
-        vehicle.setStatus(VehicleStatus.AVAILABLE);
-        vehicle.setCreatedAt(LocalDateTime.now());
-        vehicle.setUpdatedAt(LocalDateTime.now());
+        VehicleType vType = VehicleType.CAR;
+        if (request.getType() != null) {
+            try {
+                vType = VehicleType.valueOf(request.getType().toUpperCase());
+            } catch (Exception ignored) {}
+        }
+
+        Vehicle vehicle = Vehicle.builder()
+                .licensePlate(request.getLicensePlate().toUpperCase())
+                .brand(request.getBrand())
+                .model(request.getModel())
+                .year(request.getYear())
+                .color(request.getColor() != null ? request.getColor() : "Branco")
+                .seatCapacity(request.getSeatCapacity() != null ? request.getSeatCapacity() : 4)
+                .fuelType(request.getFuelType() != null ? request.getFuelType() : "GASOLINE")
+                .fuelConsumptionLPer100Km(request.getFuelConsumptionLPer100Km() != null ? request.getFuelConsumptionLPer100Km() : 5.5)
+                .co2EmissionsGPerKm(request.getCo2EmissionsGPerKm() != null ? request.getCo2EmissionsGPerKm() : 115.0)
+                .type(vType)
+                .ownerId(request.getOwnerId())
+                .pricePerHour(request.getPricePerHour() != null ? request.getPricePerHour() : BigDecimal.ZERO)
+                .pricePerKm(request.getPricePerKm() != null ? request.getPricePerKm() : BigDecimal.ZERO)
+                .location(request.getLocation() != null ? request.getLocation() : "Castelo Branco")
+                .status(VehicleStatus.AVAILABLE)
+                .isDefault(Boolean.TRUE.equals(request.getIsDefault()))
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
         
         Vehicle saved = vehicleRepository.save(vehicle);
         return toDTO(saved);
@@ -47,7 +61,7 @@ public class VehicleService {
     public VehicleDTO getVehicleById(Long id) {
         return vehicleRepository.findById(id)
                 .map(this::toDTO)
-                .orElseThrow(() -> new RuntimeException("Vehicle not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Veículo não encontrado com id: " + id));
     }
     
     @Transactional(readOnly = true)
@@ -76,16 +90,20 @@ public class VehicleService {
     
     public void updateVehicleStatus(Long vehicleId, VehicleStatus status) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new RuntimeException("Vehicle not found with id: " + vehicleId));
+                .orElseThrow(() -> new RuntimeException("Veículo não encontrado com id: " + vehicleId));
         vehicle.setStatus(status);
         vehicle.setUpdatedAt(LocalDateTime.now());
         vehicleRepository.save(vehicle);
+    }
+
+    public void deleteVehicle(Long id) {
+        vehicleRepository.deleteById(id);
     }
     
     @Transactional(readOnly = true)
     public BigDecimal calculateRentalCost(Long vehicleId, Integer hours, Integer kilometers) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new RuntimeException("Vehicle not found with id: " + vehicleId));
+                .orElseThrow(() -> new RuntimeException("Veículo não encontrado com id: " + vehicleId));
         
         BigDecimal hourCost = vehicle.getPricePerHour().multiply(BigDecimal.valueOf(hours));
         BigDecimal kmCost = vehicle.getPricePerKm().multiply(BigDecimal.valueOf(kilometers));
@@ -100,12 +118,18 @@ public class VehicleService {
                 .brand(vehicle.getBrand())
                 .model(vehicle.getModel())
                 .year(vehicle.getYear())
-                .type(vehicle.getType().toString())
+                .color(vehicle.getColor())
+                .seatCapacity(vehicle.getSeatCapacity())
+                .fuelType(vehicle.getFuelType())
+                .fuelConsumptionLPer100Km(vehicle.getFuelConsumptionLPer100Km())
+                .co2EmissionsGPerKm(vehicle.getCo2EmissionsGPerKm())
+                .type(vehicle.getType() != null ? vehicle.getType().toString() : "CAR")
                 .ownerId(vehicle.getOwnerId())
-                .status(vehicle.getStatus().toString())
+                .status(vehicle.getStatus() != null ? vehicle.getStatus().toString() : "AVAILABLE")
                 .pricePerHour(vehicle.getPricePerHour())
                 .pricePerKm(vehicle.getPricePerKm())
                 .location(vehicle.getLocation())
+                .isDefault(vehicle.getIsDefault())
                 .createdAt(vehicle.getCreatedAt())
                 .updatedAt(vehicle.getUpdatedAt())
                 .build();

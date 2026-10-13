@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/trips")
@@ -47,9 +48,9 @@ public class TripController {
 
     @GetMapping("/search")
     public ResponseEntity<List<TripDTO>> searchTrips(
-            @RequestParam String departure,
-            @RequestParam String destination,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime departureTime) {
+            @RequestParam(required = false) String departure,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime departureTime) {
         List<TripDTO> trips = tripService.searchTrips(departure, destination, departureTime);
         return ResponseEntity.ok(trips);
     }
@@ -68,10 +69,35 @@ public class TripController {
         return ResponseEntity.ok(trip);
     }
 
+    // ==========================================
+    // RESERVAS
+    // ==========================================
+
     @PostMapping("/reservations")
     public ResponseEntity<ReservationDTO> createReservation(@RequestBody CreateReservationRequest request) {
         ReservationDTO reservation = tripService.createReservation(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(reservation);
+    }
+
+    @PostMapping("/reservations/{id}/confirm")
+    public ResponseEntity<ReservationDTO> confirmReservation(@PathVariable Long id) {
+        ReservationDTO reservation = tripService.confirmReservation(id);
+        return ResponseEntity.ok(reservation);
+    }
+
+    @PostMapping("/reservations/{id}/reject")
+    public ResponseEntity<ReservationDTO> rejectReservation(
+            @PathVariable Long id, 
+            @RequestBody(required = false) Map<String, String> body) {
+        String reason = body != null ? body.get("reason") : "Sem justificação";
+        ReservationDTO reservation = tripService.rejectReservation(id, reason);
+        return ResponseEntity.ok(reservation);
+    }
+
+    @PostMapping("/reservations/{id}/cancel")
+    public ResponseEntity<ReservationDTO> cancelReservation(@PathVariable Long id) {
+        ReservationDTO reservation = tripService.cancelReservation(id);
+        return ResponseEntity.ok(reservation);
     }
 
     @GetMapping("/reservations/passenger/{passengerId}")
@@ -80,18 +106,16 @@ public class TripController {
         return ResponseEntity.ok(reservations);
     }
 
+    @GetMapping("/reservations/driver/{driverId}")
+    public ResponseEntity<List<ReservationDTO>> getReservationsForDriver(@PathVariable Long driverId) {
+        List<ReservationDTO> reservations = tripService.getReservationsForDriver(driverId);
+        return ResponseEntity.ok(reservations);
+    }
+
     @GetMapping("/{tripId}/reservations")
     public ResponseEntity<List<ReservationDTO>> getReservationsByTrip(@PathVariable Long tripId) {
         List<ReservationDTO> reservations = tripService.getReservationsByTrip(tripId);
         return ResponseEntity.ok(reservations);
-    }
-
-    @PutMapping("/reservations/{id}/status")
-    public ResponseEntity<ReservationDTO> updateReservationStatus(
-            @PathVariable Long id,
-            @RequestParam String status) {
-        ReservationDTO reservation = tripService.updateReservationStatus(id, status);
-        return ResponseEntity.ok(reservation);
     }
 
 }

@@ -18,13 +18,14 @@ public class PaymentDTO {
     
     private Long id;
     private Long tripId;
+    private Long reservationId;
     private Long passengerId;
+    private Long driverId;
     private BigDecimal amount;
     private PaymentStatus status;
     private PaymentMethod method;
     private String transactionId;
     private String description;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
     private LocalDateTime completedAt;
 }

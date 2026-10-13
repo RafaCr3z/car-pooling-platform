@@ -24,19 +24,25 @@ public class Payment {
     @Column(nullable = false)
     private Long tripId;
     
+    private Long reservationId;
+    
     @Column(nullable = false)
     private Long passengerId;
+
+    private Long driverId;
     
     @Column(nullable = false)
     private BigDecimal amount;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentStatus status;
+    @Builder.Default
+    private PaymentStatus status = PaymentStatus.PENDING;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentMethod method;
+    @Builder.Default
+    private PaymentMethod method = PaymentMethod.MBWAY;
     
     @Column(nullable = false, unique = true)
     private String transactionId;
@@ -44,7 +50,7 @@ public class Payment {
     @Column(length = 500)
     private String description;
     
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
@@ -52,4 +58,17 @@ public class Payment {
     
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (status == null) status = PaymentStatus.PENDING;
+        if (method == null) method = PaymentMethod.MBWAY;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

@@ -21,12 +21,16 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_id", nullable = false)
     private Trip trip;
 
     @Column(nullable = false)
     private Long passengerId;
+
+    private String passengerName;
+    private String passengerEmail;
+    private String passengerPhone;
 
     @Column(nullable = false)
     @Builder.Default
@@ -50,6 +54,8 @@ public class Reservation {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (numberOfSeats == null) numberOfSeats = 1;
+        if (status == null) status = ReservationStatus.PENDING;
     }
 
     @PreUpdate

@@ -14,12 +14,12 @@
     <artifactId>common-lib</artifactId>
     <packaging>jar</packaging>
     <name>Common Library</name>
-    <description>Biblioteca comum para todos os microserviços</description>
+    <description>Biblioteca comum com DTOs, Eventos e Utilitários para a arquitetura de microserviços</description>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-json</artifactId>
         </dependency>
 
         <dependency>

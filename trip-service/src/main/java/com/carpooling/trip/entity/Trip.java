@@ -24,11 +24,22 @@ public class Trip {
     @Column(nullable = false)
     private Long driverId;
 
+    private String driverName;
+
+    private Long vehicleId;
+
+    private String vehicleInfo; // e.g. "Peugeot 208 (12-AB-34)"
+
     @Column(nullable = false)
     private String departureLocation;
 
     @Column(nullable = false)
     private String destinationLocation;
+
+    private Double originLatitude;
+    private Double originLongitude;
+    private Double destinationLatitude;
+    private Double destinationLongitude;
 
     @Column(nullable = false)
     private LocalDateTime departureDateTime;
@@ -46,8 +57,20 @@ public class Trip {
     @Column(nullable = false)
     private BigDecimal costPerPassenger;
 
+    @Builder.Default
+    private BigDecimal estimatedFuelCost = BigDecimal.ZERO;
+
+    @Builder.Default
+    private BigDecimal estimatedTolls = BigDecimal.ZERO;
+
     @Column(nullable = false)
     private Double distance;
+
+    @Builder.Default
+    private Double co2SavedKg = 0.0;
+
+    @Column(length = 1000)
+    private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -64,6 +87,11 @@ public class Trip {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (occupiedSeats == null) occupiedSeats = 0;
+        if (status == null) status = TripStatus.OPEN;
+        if (estimatedFuelCost == null) estimatedFuelCost = BigDecimal.ZERO;
+        if (estimatedTolls == null) estimatedTolls = BigDecimal.ZERO;
+        if (co2SavedKg == null) co2SavedKg = 0.0;
     }
 
     @PreUpdate

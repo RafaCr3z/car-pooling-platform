@@ -1,8 +1,6 @@
 package com.carpooling.vehicle.dto;
 
 import java.math.BigDecimal;
-
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -18,33 +16,33 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreateVehicleRequest {
     
-    @NotBlank(message = "License plate is required")
+    @NotBlank(message = "Matrícula é obrigatória")
     private String licensePlate;
     
-    @NotBlank(message = "Brand is required")
+    @NotBlank(message = "Marca é obrigatória")
     private String brand;
     
-    @NotBlank(message = "Model is required")
+    @NotBlank(message = "Modelo é obrigatório")
     private String model;
     
-    @NotNull(message = "Year is required")
+    @NotNull(message = "Ano é obrigatório")
     @Min(1990)
-    @Max(2030)
+    @Max(2035)
     private Integer year;
+
+    private String color;
+    private Integer seatCapacity;
+    private String fuelType;
+    private Double fuelConsumptionLPer100Km;
+    private Double co2EmissionsGPerKm;
     
-    @NotNull(message = "Vehicle type is required")
     private String type;
     
-    @NotNull(message = "Owner ID is required")
+    @NotNull(message = "ID do proprietário/condutor é obrigatório")
     private Long ownerId;
     
-    @NotNull(message = "Price per hour is required")
-    @DecimalMin("0.01")
     private BigDecimal pricePerHour;
-    
-    @NotNull(message = "Price per km is required")
-    @DecimalMin("0.01")
     private BigDecimal pricePerKm;
-    
     private String location;
+    private Boolean isDefault;
 }

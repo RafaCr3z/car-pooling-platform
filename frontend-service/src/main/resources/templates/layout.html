@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="pt">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="'Car Pooling - ' + ${title != null ? title : 'Plataforma de Partilha de Viagens'}">Car Pooling</title>
+    <title th:text="'Car Pooling - ' + (${title} != null ? ${title} : 'Partilha Inteligente de Viagens')">Car Pooling</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,241 +11,183 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Custom CSS -->
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <style>
         :root {
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --warning-color: #ffc107;
-            --info-color: #17a2b8;
+            --primary: #1e40af;
+            --primary-hover: #1d4ed8;
+            --secondary: #0d9488;
+            --accent: #10b981;
+            --bg-light: #f1f5f9;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Navbar Styles */
-        .navbar {
-            background: linear-gradient(135deg, var(--primary-color), #0056b3);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .navbar-custom {
+            background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
         }
 
         .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-            color: white !important;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
-        .navbar-brand i {
-            margin-right: 8px;
-        }
-
-        /* Hero Section */
-        .hero {
-            background: linear-gradient(135deg, var(--primary-color), #0056b3);
-            color: white;
-            padding: 80px 0;
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 30px;
-        }
-
-        /* Card Styles */
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            margin-bottom: 20px;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
-        }
-
-        .card-header {
-            background: linear-gradient(135deg, var(--primary-color), #0056b3);
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
-            border: none;
-        }
-
-        /* Button Styles */
-        .btn {
-            border-radius: 8px;
-            padding: 10px 20px;
+        .nav-link {
             font-weight: 500;
-            transition: all 0.3s;
+            transition: opacity 0.2s;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color), #0056b3);
-            border: none;
+        .nav-link:hover {
+            opacity: 0.85;
         }
 
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #0056b3, #003d82);
-            transform: translateY(-2px);
-        }
-
-        /* Form Styles */
-        .form-control, .form-select {
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            padding: 10px 15px;
-            transition: all 0.3s;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-
-        /* Alert Styles */
-        .alert {
-            border-radius: 8px;
-            border: none;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        /* Footer Styles */
-        footer {
-            background-color: #343a40;
+        .badge-eco {
+            background: linear-gradient(135deg, #059669, #10b981);
             color: white;
-            padding: 30px 0;
-            margin-top: 50px;
-            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 9999px;
         }
 
-        /* Trip Card */
-        .trip-card {
-            border-left: 5px solid var(--primary-color);
+        .card-custom {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            background: white;
         }
 
-        .trip-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 8px 18px;
+            transition: all 0.2s;
         }
 
-        .trip-price {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--success-color);
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
         }
 
-        .trip-seats {
-            background-color: #e7f3ff;
-            padding: 5px 10px;
-            border-radius: 5px;
+        .notification-dropdown {
+            width: 340px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 10px 14px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.88rem;
+        }
+
+        .notification-item:hover {
+            background-color: #f8fafc;
+        }
+
+        footer {
+            margin-top: auto;
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 24px 0;
             font-size: 0.9rem;
-        }
-
-        /* Dashboard Grid */
-        .dashboard-card {
-            text-align: center;
-            padding: 30px;
-        }
-
-        .dashboard-card i {
-            font-size: 3rem;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-
-        .dashboard-card h3 {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .hero p {
-                font-size: 1rem;
-            }
-
-            .card {
-                margin-bottom: 15px;
-            }
         }
     </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-2">
     <div class="container">
-        <a class="navbar-brand" href="/">
-            <i class="fas fa-car"></i> Car Pooling
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <i class="fas fa-car-side me-2 fs-4 text-warning"></i>
+            <span>CarPooling <span class="badge bg-light text-primary ms-1" style="font-size: 0.65rem;">PT</span></span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link" href="/">Home</a>
+                    <a class="nav-link" href="/trips/search"><i class="fas fa-search me-1"></i> Procurar Boleias</a>
                 </li>
                 <th:block th:if="${session.email}">
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                        <a class="nav-link text-warning fw-bold" href="/trips/create"><i class="fas fa-plus-circle me-1"></i> Publicar Viagem</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="tripsDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-road"></i> Viagens
+                        <a class="nav-link dropdown-toggle" href="#" id="menuViagens" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-route me-1"></i> Minha Atividade
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/trips/search">Pesquisar Viagens</a></li>
-                            <li><a class="dropdown-item" href="/trips/create">Criar Viagem</a></li>
-                            <li><a class="dropdown-item" href="/trips/my-trips">Minhas Viagens</a></li>
-                            <li><a class="dropdown-item" href="/trips/my-reservations">Minhas Reservas</a></li>
+                            <li><a class="dropdown-item" href="/trips/my-trips"><i class="fas fa-car me-2 text-primary"></i> As Minhas Viagens (Condutor)</a></li>
+                            <li><a class="dropdown-item" href="/trips/driver-requests"><i class="fas fa-user-check me-2 text-success"></i> Pedidos de Boleia Recebidos</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/trips/my-reservations"><i class="fas fa-ticket-alt me-2 text-info"></i> As Minhas Reservas (Passageiro)</a></li>
+                            <li><a class="dropdown-item" href="/vehicles"><i class="fas fa-wrench me-2 text-secondary"></i> Meus Veículos</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> [[${session.email}]]
+                    <th:block th:if="${session.role == 'ADMIN'}">
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold text-info" href="/admin"><i class="fas fa-shield-alt me-1"></i> Painel Admin</a>
+                        </li>
+                    </th:block>
+                </th:block>
+            </ul>
+
+            <ul class="navbar-nav ms-auto align-items-center">
+                <th:block th:if="${session.email}">
+                    <!-- Notification Bell -->
+                    <li class="nav-item dropdown me-2">
+                        <a class="nav-link position-relative" href="#" id="bellDropdown" role="button" data-bs-toggle="dropdown" onclick="carregarNotificacoes()">
+                            <i class="fas fa-bell fs-5"></i>
+                            <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size: 0.65rem;">
+                                0
+                            </span>
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/profile">Perfil</a></li>
+                        <div class="dropdown-menu dropdown-menu-end notification-dropdown shadow" aria-labelledby="bellDropdown" id="notifList">
+                            <div class="p-2 text-muted text-center" style="font-size: 0.85rem;">Sem novas notificações</div>
+                        </div>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
+                            <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center me-2 fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                [[${#strings.substring(session.fullName != null ? session.fullName : session.email, 0, 1)}]]
+                            </div>
+                            <span>[[${session.fullName != null ? session.fullName : session.email}]]</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li class="dropdown-header">Perfil: <strong class="badge bg-secondary">[[${session.role}]]</strong></li>
+                            <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a></li>
+                            <li><a class="dropdown-item" href="/vehicles"><i class="fas fa-car me-2"></i> Meus Veículos</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                            <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i> Terminar Sessão</a></li>
                         </ul>
                     </li>
                 </th:block>
                 <th:block th:unless="${session.email}">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
+                    <li class="nav-item me-2">
+                        <a class="nav-link btn btn-outline-light btn-sm px-3 text-white" href="/login"><i class="fas fa-sign-in-alt me-1"></i> Entrar</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/register"><i class="fas fa-user-plus"></i> Registar</a>
+                        <a class="btn btn-warning btn-sm px-3 fw-bold text-dark" href="/register"><i class="fas fa-user-plus me-1"></i> Criar Conta</a>
                     </li>
                 </th:block>
             </ul>
@@ -253,76 +195,90 @@
     </div>
 </nav>
 
-<!-- Messages -->
-<div class="container mt-4">
-    <th:block th:if="${param.success}">
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle"></i>
-            <th:block th:each="msg : ${param.success}">
-                <span th:text="${msg}"></span>
-            </th:block>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    </th:block>
-
-    <th:block th:if="${param.error}">
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle"></i>
-            <th:block th:each="msg : ${param.error}">
-                <span th:text="${msg}"></span>
-            </th:block>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    </th:block>
+<!-- Flash Alerts -->
+<div class="container mt-3">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show card-custom" role="alert">
+        <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show card-custom" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 </div>
 
-<!-- Main Content -->
-<main class="container" style="min-height: calc(100vh - 200px); margin-top: 20px;">
+<!-- Main Body -->
+<main class="container my-4 flex-grow-1">
     <div th:replace="${content}"></div>
 </main>
 
 <!-- Footer -->
 <footer>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4">
-                <h5><i class="fas fa-car"></i> Car Pooling</h5>
-                <p>Partilhe viagens e economize combustível</p>
+    <div class="container text-center">
+        <div class="row align-items-center">
+            <div class="col-md-6 text-md-start mb-2 mb-md-0">
+                <i class="fas fa-leaf text-success me-1"></i>
+                <strong>CarPooling PT</strong> &bull; Mobilidade Sustentável & Redução de CO2 &bull; Aplicações Distribuídas 2025/2026
             </div>
-            <div class="col-md-4">
-                <h5>Links</h5>
-                <ul style="list-style: none; padding: 0;">
-                    <li><a href="/" style="color: white; text-decoration: none;">Home</a></li>
-                    <li><a href="/trips/search" style="color: white; text-decoration: none;">Pesquisar</a></li>
-                </ul>
-            </div>
-            <div class="col-md-4">
-                <h5>Contacto</h5>
-                <p>
-                    <i class="fas fa-envelope"></i> info@carpooling.pt<br>
-                    <i class="fas fa-phone"></i> +351 XXX XXX XXX
-                </p>
+            <div class="col-md-6 text-md-end">
+                <span class="badge bg-secondary me-2">Spring Boot 3.2</span>
+                <span class="badge bg-secondary me-2">RabbitMQ</span>
+                <span class="badge bg-secondary me-2">Resilience4j</span>
+                <span class="badge bg-secondary">Docker</span>
             </div>
         </div>
-        <hr style="border-color: #555;">
-        <p>&copy; 2024 Car Pooling. Todos os direitos reservados.</p>
     </div>
 </footer>
 
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Custom JS -->
 <script>
-    // Auto-hide alerts after 5 seconds
-    document.addEventListener('DOMContentLoaded', function() {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-            setTimeout(() => {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            }, 5000);
-        });
+    function checkUnread() {
+        fetch('/notifications/api/unread-count')
+            .then(res => res.json())
+            .then(data => {
+                const badge = document.getElementById('notifBadge');
+                if (badge && data.unreadCount > 0) {
+                    badge.innerText = data.unreadCount;
+                    badge.classList.remove('d-none');
+                } else if (badge) {
+                    badge.classList.add('d-none');
+                }
+            }).catch(e => {});
+    }
+
+    function carregarNotificacoes() {
+        fetch('/notifications/api/list')
+            .then(res => res.json())
+            .then(list => {
+                const container = document.getElementById('notifList');
+                if (!container) return;
+                if (!list || list.length === 0) {
+                    container.innerHTML = '<div class="p-3 text-muted text-center" style="font-size: 0.85rem;"><i class="fas fa-check-circle text-success me-1"></i> Sem notificações pendentes</div>';
+                    return;
+                }
+                let html = '<div class="p-2 border-bottom fw-bold text-primary" style="font-size: 0.85rem;">Notificações Recentes</div>';
+                list.slice(0, 5).forEach(n => {
+                    html += `
+                        <div class="notification-item ${n.isRead ? 'text-muted' : 'fw-bold bg-light'}">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-info-circle text-info me-1"></i> ${n.title}</span>
+                                <small class="text-muted" style="font-size: 0.75rem;">${n.createdAt ? n.createdAt.substring(0, 10) : ''}</small>
+                            </div>
+                            <div class="text-secondary small mt-1">${n.message}</div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }).catch(e => {});
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        checkUnread();
+        setInterval(checkUnread, 15000);
     });
 </script>
 

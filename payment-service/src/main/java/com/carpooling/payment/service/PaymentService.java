@@ -3,12 +3,15 @@ package com.carpooling.payment.service;
 import com.carpooling.payment.dto.CreatePaymentRequest;
 import com.carpooling.payment.dto.PaymentDTO;
 import com.carpooling.payment.entity.Payment;
+import com.carpooling.payment.entity.PaymentMethod;
 import com.carpooling.payment.entity.PaymentStatus;
 import com.carpooling.payment.repository.PaymentRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -16,24 +19,33 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 @Transactional
 public class PaymentService {
     
     private final PaymentRepository paymentRepository;
     
     public PaymentDTO createPayment(CreatePaymentRequest request) {
-        Payment payment = new Payment();
-        payment.setTripId(request.getTripId());
-        payment.setPassengerId(request.getPassengerId());
-        payment.setAmount(request.getAmount());
-        payment.setMethod(request.getMethod());
-        payment.setStatus(PaymentStatus.PENDING);
-        payment.setTransactionId(UUID.randomUUID().toString());
-        payment.setDescription(request.getDescription());
-        payment.setCreatedAt(LocalDateTime.now());
-        payment.setUpdatedAt(LocalDateTime.now());
+        PaymentMethod method = request.getMethod() != null ? request.getMethod() : PaymentMethod.MBWAY;
+        String txnPrefix = method == PaymentMethod.MBWAY ? "MBWAY-" : "CARD-";
+
+        Payment payment = Payment.builder()
+                .tripId(request.getTripId())
+                .reservationId(request.getReservationId())
+                .passengerId(request.getPassengerId())
+                .driverId(request.getDriverId())
+                .amount(request.getAmount())
+                .method(method)
+                .status(PaymentStatus.COMPLETED) // Simulação aprovada de imediato
+                .transactionId(txnPrefix + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                .description(request.getDescription() != null ? request.getDescription() : "Partilha de despesas de viagem")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .completedAt(LocalDateTime.now())
+                .build();
         
         Payment saved = paymentRepository.save(payment);
+        log.info("Pagamento registado e aprovado com sucesso: ID={}, Txn={}", saved.getId(), saved.getTransactionId());
         return toDTO(saved);
     }
     
@@ -41,14 +53,22 @@ public class PaymentService {
     public PaymentDTO getPaymentById(Long id) {
         return paymentRepository.findById(id)
                 .map(this::toDTO)
-                .orElseThrow(() -> new RuntimeException("Payment not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Pagamento não encontrado com id: " + id));
     }
     
     @Transactional(readOnly = true)
     public PaymentDTO getPaymentByTransactionId(String transactionId) {
         return paymentRepository.findByTransactionId(transactionId)
                 .map(this::toDTO)
-                .orElseThrow(() -> new RuntimeException("Payment not found with transaction id: " + transactionId));
+                .orElseThrow(() -> new RuntimeException("Pagamento não encontrado com transaction id: " + transactionId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentDTO> getAllPayments() {
+        return paymentRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
     
     @Transactional(readOnly = true)
@@ -74,19 +94,26 @@ public class PaymentService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public BigDecimal getTotalTransactedAmount() {
+        return paymentRepository.findByStatus(PaymentStatus.COMPLETED).stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
     
     public void completePayment(Long paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found with id: " + paymentId));
+                .orElseThrow(() -> new RuntimeException("Pagamento não encontrado com id: " + paymentId));
         payment.setStatus(PaymentStatus.COMPLETED);
         payment.setCompletedAt(LocalDateTime.now());
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
     }
-    
+
     public void failPayment(Long paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found with id: " + paymentId));
+                .orElseThrow(() -> new RuntimeException("Pagamento não encontrado com id: " + paymentId));
         payment.setStatus(PaymentStatus.FAILED);
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
@@ -94,7 +121,7 @@ public class PaymentService {
     
     public void refundPayment(Long paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found with id: " + paymentId));
+                .orElseThrow(() -> new RuntimeException("Pagamento não encontrado com id: " + paymentId));
         payment.setStatus(PaymentStatus.REFUNDED);
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
@@ -104,14 +131,15 @@ public class PaymentService {
         return PaymentDTO.builder()
                 .id(payment.getId())
                 .tripId(payment.getTripId())
+                .reservationId(payment.getReservationId())
                 .passengerId(payment.getPassengerId())
+                .driverId(payment.getDriverId())
                 .amount(payment.getAmount())
                 .status(payment.getStatus())
                 .method(payment.getMethod())
                 .transactionId(payment.getTransactionId())
                 .description(payment.getDescription())
                 .createdAt(payment.getCreatedAt())
-                .updatedAt(payment.getUpdatedAt())
                 .completedAt(payment.getCompletedAt())
                 .build();
     }

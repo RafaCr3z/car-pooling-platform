@@ -2,16 +2,25 @@ spring:
   application:
     name: trip-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/carpooling_trips
-    username: carpooling
-    password: carpooling123
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/carpooling_trips}
+    username: ${SPRING_DATASOURCE_USERNAME:carpooling}
+    password: ${SPRING_DATASOURCE_PASSWORD:carpooling123}
     driver-class-name: org.postgresql.Driver
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
 
 server:
   port: 8082
@@ -19,7 +28,7 @@ server:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
 
 resilience4j:
   circuitbreaker:
@@ -31,6 +40,16 @@ resilience4j:
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
         waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+      vehicleClient:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+      locationClient:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
         failureRateThreshold: 50
 
 springdoc:

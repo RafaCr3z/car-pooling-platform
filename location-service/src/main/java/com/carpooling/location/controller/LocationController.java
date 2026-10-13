@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -19,6 +20,25 @@ public class LocationController {
     
     private final LocationService locationService;
     
+    @GetMapping("/cities")
+    public ResponseEntity<List<LocationService.CityLocation>> getAllCities() {
+        return ResponseEntity.ok(locationService.getAllCities());
+    }
+
+    @GetMapping("/geocode")
+    public ResponseEntity<LocationService.CityLocation> geocodeCity(@RequestParam String city) {
+        return locationService.findCity(city)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/route-cities")
+    public ResponseEntity<Map<String, Object>> getRouteBetweenCities(
+            @RequestParam String origin,
+            @RequestParam String destination) {
+        return ResponseEntity.ok(locationService.calculateRouteBetweenCities(origin, destination));
+    }
+
     @PostMapping("/validate")
     public ResponseEntity<Map<String, Object>> validateLocation(@Valid @RequestBody LocationDTO location) {
         boolean isValid = locationService.isValidLocation(location);

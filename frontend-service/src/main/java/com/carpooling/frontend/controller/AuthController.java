@@ -1,6 +1,8 @@
 package com.carpooling.frontend.controller;
 
+import com.carpooling.frontend.dto.LoginResponseDTO;
 import com.carpooling.frontend.service.AuthService;
+import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -9,8 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.servlet.http.HttpSession;
-
 @Controller
 @Slf4j
 @AllArgsConstructor
@@ -18,18 +18,11 @@ public class AuthController {
 
     private final AuthService authService;
 
-    /**
-     * Página de Login
-     */
     @GetMapping("/login")
     public String loginPage() {
-        log.info("Acessando página de login");
         return "auth/login";
     }
 
-    /**
-     * Processa o Login
-     */
     @PostMapping("/login")
     public String login(
             @RequestParam String email,
@@ -39,35 +32,36 @@ public class AuthController {
 
         try {
             log.info("Tentando login para: {}", email);
-            String token = authService.login(email, password);
+            LoginResponseDTO response = authService.login(email, password);
 
-            // Guardar token na sessão
-            session.setAttribute("token", token);
-            session.setAttribute("email", email);
+            // Guardar na sessão HTTP
+            session.setAttribute("token", response.getToken());
+            session.setAttribute("userId", response.getUserId());
+            session.setAttribute("email", response.getEmail());
+            session.setAttribute("fullName", response.getFullName());
+            session.setAttribute("role", response.getRole());
+            session.setAttribute("roles", response.getRoles());
 
-            log.info("Login bem sucedido para: {}", email);
-            redirectAttributes.addFlashAttribute("success", "Login realizado com sucesso!");
+            log.info("Login bem-sucedido para {} (id={}, role={})", email, response.getUserId(), response.getRole());
+            redirectAttributes.addFlashAttribute("success", "Bem-vindo(a), " + response.getFullName() + "!");
+
+            if ("ADMIN".equalsIgnoreCase(response.getRole())) {
+                return "redirect:/admin";
+            }
             return "redirect:/dashboard";
 
         } catch (Exception e) {
             log.error("Erro no login: {}", e.getMessage());
-            redirectAttributes.addFlashAttribute("error", "Email ou password incorretos");
+            redirectAttributes.addFlashAttribute("error", "Email ou palavra-passe incorretos.");
             return "redirect:/login";
         }
     }
 
-    /**
-     * Página de Registo
-     */
     @GetMapping("/register")
     public String registerPage() {
-        log.info("Acessando página de registo");
         return "auth/register";
     }
 
-    /**
-     * Processa o Registo
-     */
     @PostMapping("/register")
     public String register(
             @RequestParam String email,
@@ -78,29 +72,24 @@ public class AuthController {
             RedirectAttributes redirectAttributes) {
 
         try {
-            log.info("Registando novo utilizador: {}", email);
+            log.info("Registando utilizador: {}", email);
             authService.register(email, password, fullName, phoneNumber, role);
 
-            log.info("Registo bem sucedido para: {}", email);
-            redirectAttributes.addFlashAttribute("success", "Registo realizado com sucesso! Faça login para continuar.");
+            redirectAttributes.addFlashAttribute("success", "Conta criada com sucesso! Faça login para continuar.");
             return "redirect:/login";
 
         } catch (Exception e) {
             log.error("Erro no registo: {}", e.getMessage());
-            redirectAttributes.addFlashAttribute("error", "Erro no registo: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Erro ao criar conta: " + e.getMessage());
             return "redirect:/register";
         }
     }
 
-    /**
-     * Logout
-     */
     @GetMapping("/logout")
     public String logout(HttpSession session, RedirectAttributes redirectAttributes) {
         log.info("Logout realizado");
         session.invalidate();
-        redirectAttributes.addFlashAttribute("success", "Logout realizado com sucesso");
+        redirectAttributes.addFlashAttribute("success", "Sessão terminada com sucesso.");
         return "redirect:/";
     }
-
 }

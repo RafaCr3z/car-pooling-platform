@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos de Boleia Recebidos - Car Pooling PT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f1f5f9;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .request-card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark py-2" style="background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%);">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="fas fa-car-side text-warning me-2"></i>CarPooling PT</a>
+        <div class="ms-auto d-flex align-items-center">
+            <a href="/dashboard" class="btn btn-outline-light btn-sm me-2"><i class="fas fa-arrow-left me-1"></i>Dashboard</a>
+            <a href="/logout" class="btn btn-outline-light btn-sm"><i class="fas fa-sign-out-alt me-1"></i>Sair</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fas fa-user-check text-primary me-2"></i>Pedidos de Reserva Recebidos</h3>
+            <p class="text-muted small mb-0">Confirma ou recusa passageiros nas tuas viagens partilhadas. O passageiro recebe notificação instantânea.</p>
+        </div>
+        <a href="/trips/my-trips" class="btn btn-outline-secondary btn-sm"><i class="fas fa-car me-1"></i>Minhas Viagens</a>
+    </div>
+
+    <!-- Mensagens -->
+    <div th:if="${success}" class="alert alert-success py-2 small" role="alert">
+        <i class="fas fa-check-circle me-1"></i> <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-danger py-2 small" role="alert">
+        <i class="fas fa-exclamation-circle me-1"></i> <span th:text="${error}"></span>
+    </div>
+
+    <th:block th:if="${requests != null && !requests.isEmpty()}">
+        <div th:each="req : ${requests}" class="request-card border-start border-4" 
+             th:classappend="${req.status == 'PENDING' ? 'border-warning' : (req.status == 'CONFIRMED' ? 'border-success' : 'border-danger')}">
+            <div class="row align-items-center">
+                <!-- Passageiro -->
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 me-2">
+                            <i class="fas fa-user fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-6" th:text="${req.passengerName != null ? req.passengerName : 'Passageiro'}">Maria Santos</div>
+                            <div class="text-muted small" th:text="${req.passengerEmail}">maria.santos@carpooling.pt</div>
+                        </div>
+                    </div>
+                    <span class="badge" 
+                          th:classappend="${req.status == 'PENDING' ? 'bg-warning text-dark' : (req.status == 'CONFIRMED' ? 'bg-success text-white' : 'bg-danger text-white')}"
+                          th:text="${req.status}">
+                        PENDING
+                    </span>
+                </div>
+
+                <!-- Viagem e Detalhes -->
+                <div class="col-md-4 my-2 my-md-0">
+                    <div class="fw-semibold">
+                        <span th:text="${req.departureLocation}">Castelo Branco</span>
+                        <i class="fas fa-arrow-right mx-1 text-primary"></i>
+                        <span th:text="${req.destinationLocation}">Lisboa</span>
+                    </div>
+                    <div class="text-muted small mt-1">
+                        <i class="fas fa-chair text-secondary me-1"></i>
+                        Lugares Solicitados: <strong th:text="${req.numberOfSeats}">1</strong>
+                    </div>
+                    <div class="text-muted small">
+                        <i class="fas fa-euro-sign text-success me-1"></i>
+                        Valor Total: <strong>€ <span th:text="${req.totalPrice}">10.77</span></strong>
+                    </div>
+                </div>
+
+                <!-- Ações do Condutor -->
+                <div class="col-md-4 text-md-end">
+                    <th:block th:if="${req.status == 'PENDING'}">
+                        <form method="POST" th:action="@{'/trips/reservations/' + ${req.id} + '/confirm'}" class="d-inline">
+                            <button type="submit" class="btn btn-success btn-sm fw-bold me-1">
+                                <i class="fas fa-check me-1"></i> Aceitar Passageiro
+                            </button>
+                        </form>
+                        <form method="POST" th:action="@{'/trips/reservations/' + ${req.id} + '/reject'}" class="d-inline">
+                            <button type="submit" class="btn btn-outline-danger btn-sm fw-bold">
+                                <i class="fas fa-times me-1"></i> Recusar
+                            </button>
+                        </form>
+                    </th:block>
+                    <th:block th:if="${req.status == 'CONFIRMED'}">
+                        <span class="text-success fw-bold small"><i class="fas fa-check-circle me-1"></i>Lugar Confirmado</span>
+                    </th:block>
+                    <th:block th:if="${req.status == 'REJECTED'}">
+                        <span class="text-danger small"><i class="fas fa-ban me-1"></i>Recusado</span>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block th:if="${requests == null || requests.isEmpty()}">
+        <div class="text-center p-5 bg-white rounded-4 shadow-sm">
+            <i class="fas fa-envelope-open text-muted fs-1 mb-3"></i>
+            <h5 class="fw-bold">Nenhum pedido de reserva pendente</h5>
+            <p class="text-muted small">Quando os passageiros reservarem lugares nas tuas viagens, os pedidos aparecerão aqui para aprovação.</p>
+        </div>
+    </th:block>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

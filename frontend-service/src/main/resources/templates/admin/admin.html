@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Administração & Moderação - Car Pooling PT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .admin-card {
+            background-color: #1e293b;
+            border-radius: 14px;
+            border: 1px solid #334155;
+            padding: 22px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        }
+        .stat-badge {
+            background-color: #334155;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid #475569;
+        }
+        .table-dark-custom {
+            --bs-table-bg: #1e293b;
+            --bs-table-color: #f8fafc;
+            --bs-table-border-color: #334155;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar Admin -->
+<nav class="navbar navbar-expand-lg navbar-dark py-2" style="background-color: #0b1120; border-bottom: 1px solid #334155;">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-info" href="/admin">
+            <i class="fas fa-shield-alt text-warning me-2"></i>CarPooling PT &bull; Admin Console
+        </a>
+        <div class="ms-auto d-flex align-items-center">
+            <span class="badge bg-danger me-3"><i class="fas fa-lock me-1"></i>Acesso Moderador</span>
+            <a href="/dashboard" class="btn btn-outline-light btn-sm me-2"><i class="fas fa-columns me-1"></i>Área Utilizador</a>
+            <a href="/logout" class="btn btn-outline-danger btn-sm"><i class="fas fa-sign-out-alt me-1"></i>Sair</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fas fa-tachometer-alt text-primary me-2"></i>Métricas Globais & Moderação</h3>
+            <p class="text-secondary small mb-0">Monitorização em tempo real de KPIs ecológicos, transações de car pooling e integridade da comunidade.</p>
+        </div>
+        <div>
+            <span class="badge bg-success-subtle text-success border border-success p-2">
+                <i class="fas fa-check-circle me-1"></i> Microsserviços Operacionais (Eureka / Gateway)
+            </span>
+        </div>
+    </div>
+
+    <!-- Mensagens -->
+    <div th:if="${success}" class="alert alert-success py-2 small" role="alert">
+        <i class="fas fa-check-circle me-1"></i> <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-danger py-2 small" role="alert">
+        <i class="fas fa-exclamation-circle me-1"></i> <span th:text="${error}"></span>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <!-- CO2 Poupado -->
+        <div class="col-md-3">
+            <div class="stat-badge">
+                <div class="text-success small fw-bold text-uppercase mb-1"><i class="fas fa-leaf me-1"></i> CO2 Poupado (Acumulado)</div>
+                <div class="fs-2 fw-bold text-white">
+                    🌱 <span th:text="${metrics != null ? metrics.totalCo2SavedKg : 0.0}">54.0</span> <span class="fs-6 text-secondary">kg</span>
+                </div>
+                <div class="text-success small mt-1">
+                    Equivalente a <strong th:text="${metrics != null ? metrics.treesPlantedEquivalent : 2.5}">2.5</strong> árvores/ano
+                </div>
+            </div>
+        </div>
+
+        <!-- Volume Transacionado -->
+        <div class="col-md-3">
+            <div class="stat-badge">
+                <div class="text-info small fw-bold text-uppercase mb-1"><i class="fas fa-coins me-1"></i> Despesas Partilhadas</div>
+                <div class="fs-2 fw-bold text-white">
+                    € <span th:text="${metrics != null ? metrics.totalRevenueTransacted : '0.00'}">64.60</span>
+                </div>
+                <div class="text-secondary small mt-1">Combustível + Portagens divididos</div>
+            </div>
+        </div>
+
+        <!-- Viagens Realizadas -->
+        <div class="col-md-3">
+            <div class="stat-badge">
+                <div class="text-warning small fw-bold text-uppercase mb-1"><i class="fas fa-road me-1"></i> Viagens no Sistema</div>
+                <div class="fs-2 fw-bold text-white">
+                    <span th:text="${metrics != null ? metrics.totalTrips : 0}">2</span>
+                </div>
+                <div class="text-secondary small mt-1">
+                    <span class="text-success" th:text="${metrics != null ? metrics.activeTrips : 0}">2</span> ativas &bull;
+                    <span class="text-info" th:text="${metrics != null ? metrics.completedTrips : 0}">0</span> concluídas
+                </div>
+            </div>
+        </div>
+
+        <!-- Utilizadores Registados -->
+        <div class="col-md-3">
+            <div class="stat-badge">
+                <div class="text-primary small fw-bold text-uppercase mb-1"><i class="fas fa-users me-1"></i> Comunidade</div>
+                <div class="fs-2 fw-bold text-white">
+                    <span th:text="${metrics != null ? metrics.totalUsers : 0}">4</span>
+                </div>
+                <div class="text-secondary small mt-1">
+                    ⭐ <span th:text="${metrics != null ? metrics.averageUserRating : 5.0}">4.9</span> / 5.0 reputação média
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Utilizadores e Moderação -->
+    <div class="admin-card mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-user-shield text-info me-2"></i>Gestão e Moderação de Utilizadores</h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-dark-custom align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small text-uppercase">
+                        <th>ID</th>
+                        <th>Nome Completo</th>
+                        <th>Email</th>
+                        <th>Tipo</th>
+                        <th>Reputação</th>
+                        <th>Estado</th>
+                        <th class="text-end">Ações de Moderação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td th:text="${u.id}">1</td>
+                        <td class="fw-bold" th:text="${u.fullName}">João Silva</td>
+                        <td class="text-secondary" th:text="${u.email}">joao.silva@carpooling.pt</td>
+                        <td>
+                            <span class="badge" 
+                                  th:classappend="${u.role == 'ADMIN' ? 'bg-danger' : (u.role == 'DRIVER' ? 'bg-primary' : 'bg-success')}"
+                                  th:text="${u.role}">
+                                DRIVER
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-warning">★</span> 
+                            <span th:text="${u.rating != null ? u.rating : 5.0}">4.9</span>
+                            <small class="text-secondary">(<span th:text="${u.ratingCount != null ? u.ratingCount : 0}">12</span>)</small>
+                        </td>
+                        <td>
+                            <span th:if="${u.isBlocked}" class="badge bg-danger">BLOQUEADO</span>
+                            <span th:unless="${u.isBlocked}" class="badge bg-success">ATIVO</span>
+                        </td>
+                        <td class="text-end">
+                            <th:block th:unless="${u.role == 'ADMIN'}">
+                                <form th:if="${!u.isBlocked}" method="POST" th:action="@{'/admin/users/' + ${u.id} + '/block'}" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm py-1" onclick="return confirm('Deseja suspender a conta deste utilizador?')">
+                                        <i class="fas fa-ban me-1"></i> Bloquear
+                                    </button>
+                                </form>
+                                <form th:if="${u.isBlocked}" method="POST" th:action="@{'/admin/users/' + ${u.id} + '/unblock'}" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-success btn-sm py-1">
+                                        <i class="fas fa-unlock me-1"></i> Desbloquear
+                                    </button>
+                                </form>
+                            </th:block>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tabela de Logs e Auditoria -->
+    <div class="admin-card">
+        <h5 class="fw-bold mb-3"><i class="fas fa-history text-secondary me-2"></i>Registo de Auditoria de Moderação (Logs Recentes)</h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-sm table-dark-custom align-middle mb-0 text-secondary" style="font-size: 0.88rem;">
+                <thead>
+                    <tr class="text-uppercase small">
+                        <th>Data / Hora</th>
+                        <th>Moderador</th>
+                        <th>Ação</th>
+                        <th>Entidade</th>
+                        <th>Detalhes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="l : ${logs}">
+                        <td th:text="${l.timestamp}">2026-10-14 00:20</td>
+                        <td class="text-white" th:text="${l.adminUsername}">admin</td>
+                        <td>
+                            <span class="badge bg-secondary" th:text="${l.action}">USER_BLOCKED</span>
+                        </td>
+                        <td th:text="${l.targetEntity + ' #' + l.targetId}">USER #3</td>
+                        <td th:text="${l.details}">Utilizador bloqueado por conduta inapropriada.</td>
+                    </tr>
+                    <tr th:if="${logs == null || logs.isEmpty()}">
+                        <td colspan="5" class="text-center py-3 text-muted">Sem registos de moderação pendentes. Sistema a operar normalmente.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

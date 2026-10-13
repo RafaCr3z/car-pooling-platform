@@ -50,6 +50,18 @@ public class VehicleController {
         List<VehicleDTO> vehicles = vehicleService.getVehiclesByOwner(ownerId);
         return ResponseEntity.ok(vehicles);
     }
+
+    @GetMapping("/driver/{driverId}")
+    public ResponseEntity<List<VehicleDTO>> getVehiclesByDriver(@PathVariable Long driverId) {
+        List<VehicleDTO> vehicles = vehicleService.getVehiclesByOwner(driverId);
+        return ResponseEntity.ok(vehicles);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteVehicle(@PathVariable Long id) {
+        vehicleService.deleteVehicle(id);
+        return ResponseEntity.noContent().build();
+    }
     
     @PostMapping("/calculate-cost")
     public ResponseEntity<Map<String, Object>> calculateRentalCost(@RequestBody Map<String, Integer> request) {

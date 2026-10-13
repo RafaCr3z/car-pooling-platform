@@ -10,8 +10,8 @@
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
-    <name>Car Pooling Sharing Platform</name>
-    <description>Microserviços baseados em Spring Cloud para Car Pooling e Car Sharing</description>
+    <name>Car Pooling Platform</name>
+    <description>Plataforma de Partilha de Viagens (Car Pooling) baseada em Spring Boot, Spring Cloud e Docker</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -36,6 +36,8 @@
         <module>vehicle-service</module>
         <module>payment-service</module>
         <module>location-service</module>
+        <module>notification-service</module>
+        <module>admin-service</module>
         <module>frontend-service</module>
     </modules>
 
@@ -48,11 +50,16 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>com.carpooling</groupId>
+                <artifactId>common-lib</artifactId>
+                <version>1.0.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <!-- Spring Boot Starters -->
+        <!-- Spring Boot Actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
