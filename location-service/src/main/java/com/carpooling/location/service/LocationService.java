@@ -4,6 +4,7 @@ import com.carpooling.location.dto.LocationDTO;
 import com.carpooling.location.dto.RouteDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -47,7 +48,9 @@ public class LocationService {
         PORTUGAL_CITIES.put(name.toLowerCase(), new CityLocation(name, lat, lon, district));
     }
 
+    @Cacheable(value = "cities")
     public List<CityLocation> getAllCities() {
+        log.info("A obter catálogo de cidades (sem cache ou cache miss)");
         return new ArrayList<>(PORTUGAL_CITIES.values());
     }
 
@@ -94,7 +97,9 @@ public class LocationService {
     /**
      * Estima custos de portagens e combustível para uma distância
      */
+    @Cacheable(value = "routes", key = "#originCity + '-' + #destinationCity")
     public Map<String, Object> calculateRouteBetweenCities(String originCity, String destinationCity) {
+        log.info("A calcular rota entre {} e {} (sem cache ou cache miss)", originCity, destinationCity);
         CityLocation origin = findCity(originCity).orElse(new CityLocation(originCity, 39.8222, -7.4909, "Portugal"));
         CityLocation dest = findCity(destinationCity).orElse(new CityLocation(destinationCity, 38.7223, -9.1393, "Portugal"));
 

@@ -199,7 +199,8 @@
             const markerDest = L.marker([dLat, dLng]).addTo(map)
                 .bindPopup(`<b>Chegada:</b> ${t.destinationLocation}`);
 
-            L.polyline([[oLat, oLng], [dLat, dLng]], { color: '#0284c7', weight: 4, dashArray: '6, 6' }).addTo(map);
+            const routePoints = [ [oLat, oLng], [dLat, dLng] ];
+            L.polyline(routePoints, { color: '#0284c7', weight: 4, dashArray: '6, 6' }).addTo(map);
         });
     }
 </script>

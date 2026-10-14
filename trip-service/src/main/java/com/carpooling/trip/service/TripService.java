@@ -19,7 +19,7 @@ import com.carpooling.trip.repository.TripRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +40,7 @@ public class TripService {
     private final ReservationRepository reservationRepository;
     private final VehicleClient vehicleClient;
     private final LocationClient locationClient;
-    private final RabbitTemplate rabbitTemplate;
+    private final AmqpTemplate rabbitTemplate;
 
     @Transactional
     public TripDTO createTrip(CreateTripRequest request) {

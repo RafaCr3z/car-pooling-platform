@@ -8,6 +8,7 @@ import com.carpooling.frontend.service.VehicleService;
 import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -48,7 +49,7 @@ public class TripController {
     /**
      * Endpoint AJAX para calcular rota e estimativas de combustível/portagens
      */
-    @GetMapping("/trips/api/calculate-route")
+    @GetMapping(value = "/trips/api/calculate-route", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> calculateRoute(
             @RequestParam String origin,

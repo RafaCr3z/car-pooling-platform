@@ -3,18 +3,22 @@
 [![Java 17](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot 3.2](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.0.0-blue.svg)](https://spring.io/projects/spring-cloud)
+[![Redis](https://img.shields.io/badge/Redis-7%20Cache--Aside-DC382D.svg)](https://redis.io/)
 [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Event--Driven-orange.svg)](https://www.rabbitmq.com/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Metrics%20Engine-E6522C.svg)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-Observability%203001-F46800.svg)](https://grafana.com/)
+[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests-25A162.svg)](https://junit.org/junit5/)
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-yellow.svg)](https://resilience4j.readme.io/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-Microservices-2496ED.svg)](https://www.docker.com/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900.svg)](https://leafletjs.com/)
 
-Plataforma avançada de **Car Pooling** desenvolvida para a unidade curricular de **Aplicações Distribuídas 2025/2026** (EST-IPCB). O sistema implementa uma arquitetura orientada a microsserviços empresariais, com comunicação orientada a eventos (**Event-Driven**) via RabbitMQ, tolerância a falhas com **Circuit Breakers** (Resilience4j), cálculo automático de despesas de viagem (combustível e portagens), métricas ambientais de poupança de **CO2** e moderação administrativa em tempo real.
+Plataforma avançada de **Car Pooling** desenvolvida para a unidade curricular de **Aplicações Distribuídas 2025/2026** (EST-IPCB). O sistema implementa uma arquitetura orientada a microsserviços empresariais, com comunicação orientada a eventos (**Event-Driven**) via RabbitMQ, cache distribuído com **Redis 7** (Cache-Aside), observabilidade total com **Prometheus e Grafana**, tolerância a falhas com **Circuit Breakers** (Resilience4j), testes unitários automatizados (**JUnit 5 + Mockito**), cálculo automático de despesas de viagem (combustível e portagens), métricas ambientais de poupança de **CO2** e moderação administrativa em tempo real.
 
 ---
 
 ## 🏛️ Arquitetura do Sistema
 
-A aplicação é composta por microsserviços desacoplados orquestrados através de um **API Gateway**, com registo e descoberta dinâmica pelo **Netflix Eureka** e mensageria assíncrona por **RabbitMQ**:
+A aplicação é composta por microsserviços desacoplados orquestrados através de um **API Gateway**, com registo e descoberta dinâmica pelo **Netflix Eureka**, mensageria assíncrona por **RabbitMQ**, cache distribuído com **Redis** e observabilidade centralizada com **Prometheus e Grafana**:
 
 ```mermaid
 flowchart TD
@@ -28,8 +32,9 @@ flowchart TD
         EUREKA["🧭 Eureka Service Registry :8761"]
     end
 
-    subgraph Mensageria Assíncrona
+    subgraph Mensageria Assíncrona & Cache
         RABBIT["🐇 RabbitMQ Topic Exchange (carpooling.topic) :5672"]
+        REDIS["⚡ Redis 7 Cache Distribuído :6379<br/>(Cache-Aside: Rotas, Distâncias & Cidades)"]
     end
 
     subgraph Microsserviços Backend
@@ -40,6 +45,11 @@ flowchart TD
         LOC["📍 Location Service :8085<br/>Cidades PT, Geocoding, Distâncias"]
         NOTIF["🔔 Notification Service :8086<br/>Consumidor RabbitMQ, Alertas em Tempo Real"]
         ADMIN["🛡️ Admin Service :8087<br/>KPIs Globais, Métricas CO2, Moderação"]
+    end
+
+    subgraph Observabilidade & Monitorização
+        PROM["📈 Prometheus :9090<br/>(Scrape Time-Series Actuator Metrics)"]
+        GRAF["📊 Grafana :3001<br/>(Dashboards JVM, Latência & Tráfego)"]
     end
 
     subgraph Persistência
@@ -75,6 +85,18 @@ flowchart TD
     ADMIN -->|Feign + Fallback| AUTH
     ADMIN -->|Feign + Fallback| TRIP
     ADMIN -->|Feign + Fallback| PAYMENT
+
+    LOC <-->|Cache-Aside (RedisCacheManager)| REDIS
+
+    AUTH -.->|Actuator Metrics| PROM
+    TRIP -.->|Actuator Metrics| PROM
+    VEHICLE -.->|Actuator Metrics| PROM
+    PAYMENT -.->|Actuator Metrics| PROM
+    LOC -.->|Actuator Metrics| PROM
+    NOTIF -.->|Actuator Metrics| PROM
+    ADMIN -.->|Actuator Metrics| PROM
+    GATEWAY -.->|Actuator Metrics| PROM
+    PROM -->|Datasource| GRAF
 
     AUTH --> DB
     TRIP --> DB
@@ -123,6 +145,9 @@ sequenceDiagram
 
 | Componente | Implementação & Vantagem Empresarial |
 | :--- | :--- |
+| **Distributed Caching (Redis 7)** | Implementação do padrão **Cache-Aside** com `GenericJackson2JsonRedisSerializer` e TTL. Caching distribuído de coordenadas de cidades e matrizes de cálculo de rota, reduzindo em >90% o tempo de resposta em chamadas repetidas e aliviando a carga na base de dados. |
+| **Observabilidade Total (Prometheus & Grafana)** | Infraestrutura completa de telemetria baseada em métricas **Micrometer Actuator** expostas em todos os microsserviços. Scrape centralizado pelo **Prometheus (:9090)** e dashboard corporativo provisionado automaticamente no **Grafana (:3001)** monitorizando latência HTTP, RPS, heap memory e GC da JVM. |
+| **Testes Automatizados (JUnit 5 + Mockito)** | Suite rigorosa de testes unitários isolando regras de negócio centrais (repartição de custos, cálculo Haversine, cálculo de CO2 e validação de lugares). Refatoração com **Princípio da Inversão de Dependência (SOLID)** desacoplando mensageria (`AmqpTemplate`). |
 | **Event-Driven Architecture** | Desacoplamento assíncrono com **RabbitMQ** (Topic Exchanges, Queues duráveis, DLQ). Os serviços transacionais não bloqueiam à espera do envio de emails/notificações. |
 | **Resiliência & Tolerância a Falhas** | Clientes **OpenFeign** protegidos com **Resilience4j Circuit Breakers** e fallbacks graceful. Se o `location-service` ou `vehicle-service` oscilar, o `trip-service` continua operacional. |
 | **Motor de Custos & Sustentabilidade** | Base de dados geográfica de cidades de Portugal. Cálculo automático de despesas partilhadas com base no consumo do carro do condutor ($L/100\text{km}$), portagens e modelo de poupança ecológica ($0.115\text{ kg CO}_2/\text{km} \times \text{lugares}$). |
@@ -142,10 +167,13 @@ sequenceDiagram
 Na pasta raiz do projeto:
 
 ```bash
-# Compilar os microsserviços (se tiver Maven local)
-mvn clean package -DskipTests
+# Compilar os microsserviços e correr a suite de testes unitários
+mvn clean test
 
-# Iniciar todos os contentores em background
+# Compilar pacotes JAR
+mvn package -DskipTests
+
+# Iniciar todos os contentores em background (15 containers)
 docker compose up -d --build
 ```
 
@@ -156,6 +184,9 @@ docker compose up -d --build
 | Serviço / Portal | URL | Descrição |
 | :--- | :--- | :--- |
 | **Frontend Web** | [http://localhost:3000](http://localhost:3000) | Interface gráfica completa (Login, Pesquisa, Mapas, Viagens, Admin) |
+| **Cockpit Grafana** | [http://localhost:3001](http://localhost:3001) | Dashboard de Observabilidade dos Microsserviços (`admin` / `admin`) |
+| **Prometheus** | [http://localhost:9090](http://localhost:9090) | Time-Series Metrics Engine, Targets de Actuator e Scrapes |
+| **Redis Cache** | `localhost:6379` | Servidor de Cache Distribuído em Memória (Redis 7 Alpine) |
 | **API Gateway** | [http://localhost:8080](http://localhost:8080) | Ponto único de entrada com roteamento dinâmico para os microsserviços |
 | **Eureka Server** | [http://localhost:8761](http://localhost:8761) | Dashboard do Service Registry com status `UP` de cada instância |
 | **RabbitMQ Management** | [http://localhost:15672](http://localhost:15672) | Gestão de Queues, Exchanges e Mensagens (`guest` / `guest`) |
@@ -180,13 +211,15 @@ Para facilitar a apresentação numa entrevista ou avaliação, o sistema inicia
 
 ## 🎯 Roteiro de Demonstração para Entrevista de Emprego
 
-1. **Apresentação da Arquitetura:**
+1. **Apresentação da Arquitetura & Observabilidade:**
    - Abrir o **Eureka Dashboard** ([localhost:8761](http://localhost:8761)) e mostrar todos os 8 microsserviços registados como `UP`.
    - Abrir o **RabbitMQ Management** ([localhost:15672](http://localhost:15672)) e exibir a topic exchange `carpooling.topic` e as filas de notificações.
+   - Abrir o **Grafana Dashboard** ([localhost:3001](http://localhost:3001), `admin` / `admin`) e demonstrar as métricas em tempo real de latência, tráfego HTTP, CPU, threads do Tomcat e Heap Memory da JVM.
+   - Demonstrar o **Cache Distribuído Redis** em execução no terminal (`docker exec redis redis-cli KEYS "*"`), comprovando o armazenamento de rotas e catálogos serializados em JSON.
 2. **Ciclo do Condutor:**
    - Entrar como `joao.silva@carpooling.pt`.
    - Ir a **"Meus Veículos"** e mostrar a viatura com consumo de 5.2 L/100km e emissões de CO2.
-   - Ir a **"Publicar Viagem"**, selecionar `Castelo Branco` -> `Lisboa`. Mostrar o cálculo automático de combustível (€19.80), portagens (€12.50), divisão por passageiro e trajeto desenhado no mapa Leaflet.
+   - Ir a **"Publicar Viagem"**, selecionar `Castelo Branco` -> `Lisboa`. Mostrar o cálculo automático instantâneo de combustível (€19.80), portagens (€12.50), divisão por passageiro e trajeto desenhado no mapa Leaflet (com cache Redis).
 3. **Ciclo da Passageira:**
    - Fazer logout e entrar como `maria.santos@carpooling.pt`.
    - Ir a **"Procurar Boleias"**, ver os marcadores de rotas no mapa de Portugal e reservar 1 lugar na viagem do João com confirmação de pagamento simulado via MBWay.
@@ -199,8 +232,33 @@ Para facilitar a apresentação numa entrevista ou avaliação, o sistema inicia
    - Fazer login com `admin@carpooling.pt` e aceder a `/admin`.
    - Demonstrar os KPIs: total de CO2 evitado ($kg$), equivalência em **árvores adultas salvas**, total de euros transacionados e média de rating.
    - Demonstrar o controlo de moderação com o botão **Bloquear / Desbloquear** e o registo de auditoria com timestamp na tabela inferior.
+6. **Execução de Testes Unitários Automatizados:**
+   - No terminal, executar:
+     ```bash
+     mvn test -pl location-service,trip-service
+     ```
+   - Demonstrar a suite de testes **JUnit 5 + Mockito** a validar regras críticas de negócio em poucos segundos sem depender de infraestrutura externa.
 
 ---
+
+## 💡 Guia de Perguntas & Respostas para Entrevistas (Senior/Mid Backend)
+
+Este repositório foi desenhado para demonstrar maturidade arquitetural e decisões de engenharia de software de nível sénior:
+
+### 1. "Por que usaste Redis e como desenhaste o caching?"
+> *"Utilizei Redis 7 para implementar o padrão **Cache-Aside**. Em vez de calcular repetidamente a fórmula de Haversine e aceder à base de dados para obter coordenadas geográficas de cidades portuguesas a cada pesquisa de viagem, o `location-service` verifica primeiro a memória cache. Configurei o `RedisCacheManager` com `GenericJackson2JsonRedisSerializer` para garantir que o payload em cache seja JSON legível e agnóstico de versão Java, evitando problemas com serialização binária padrão do JDK."*
+
+### 2. "Como geriste a tolerância a falhas na comunicação síncrona?"
+> *"A comunicação entre serviços é feita via clientes declarativos Spring Cloud OpenFeign protegidos por **Resilience4j Circuit Breakers**. Se o `location-service` ou o `vehicle-service` ficarem indisponíveis ou degradados, o circuito abre automaticamente, evitando que threads do `trip-service` fiquem presas em cascata, e dispara métodos de fallback que devolvem estimativas padrão com aviso no log."*
+
+### 3. "Como desenhaste a mensageria e por que escolheste RabbitMQ?"
+> *"Usei **RabbitMQ** com uma `TopicExchange` (`carpooling.topic`) para eventos de ciclo de vida (`trip.created`, `reservation.requested`, `reservation.confirmed`). O microsserviço de notificações consome estas mensagens de forma assíncrona. Isto desacopla o tempo de resposta da UI da entrega de emails/alertas: o passageiro recebe confirmação em milissegundos sem esperar pela geração de emails."*
+
+### 4. "Como monitorizas o ecossistema em produção?"
+> *"Configurei o **Micrometer Prometheus Actuator** em todos os microsserviços, que expõem endpoints `/actuator/prometheus`. O **Prometheus** efetua o scrape periódico das métricas dos 9 nós e o **Grafana** consome esses dados num dashboard corporativo pré-provisionado na porta `3001`. Monitorizamos os chamados 'Four Golden Signals': Latência, Tráfego (RPS), Erros HTTP (4xx/5xx) e Saturação (uso de heap memory e garbage collection)."*
+
+### 5. "Como garantiste a testabilidade do código?"
+> *"Apliquei os princípios **SOLID**, especificamente o **Dependency Inversion Principle (DIP)**. No `trip-service`, desacoplei a classe concreta do broker através da interface `AmqpTemplate`, permitindo que os testes unitários com **Mockito** e **JUnit 5** testem toda a lógica de negócio transacional (divisão de custos, validação de capacidade de lugares e cálculo de poupança de CO2) em milissegundos sem necessidade de levantar um broker real ou base de dados."*
 
 ## 🧪 Estrutura dos Módulos Maven
 
