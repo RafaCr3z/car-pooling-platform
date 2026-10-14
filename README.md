@@ -96,7 +96,7 @@ flowchart TD
     ADMIN -->|Feign + Fallback| TRIP
     ADMIN -->|Feign + Fallback| PAYMENT
 
-    LOC <-->|Cache-Aside (RedisCacheManager)| REDIS
+    LOC <-->|Cache-Aside via Redis| REDIS
 
     AUTH -.->|Actuator Metrics| PROM
     TRIP -.->|Actuator Metrics| PROM
@@ -130,7 +130,7 @@ sequenceDiagram
     participant NotifSvc as Notification Service
     participant AdminSvc as Admin Service
 
-    Condutor->>TripSvc: Publica Viagem (Castelo Branco -> Lisboa, 3 lugares, Peugeot 208)
+    Condutor->>TripSvc: Publica Viagem (Castelo Branco a Lisboa, 3 lugares, Peugeot 208)
     Note over TripSvc: Calcula Distância (225km), Combustível (€19.80), Portagens (€12.50)
     TripSvc-->>Condutor: Viagem Criada com Custo por Pessoa = €10.77
     
