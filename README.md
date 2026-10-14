@@ -257,25 +257,6 @@ Para facilitar a apresentação numa entrevista ou avaliação, o sistema inicia
 
 ---
 
-## 💡 Guia de Perguntas & Respostas para Entrevistas (Senior/Mid Backend)
-
-Este repositório foi desenhado para demonstrar maturidade arquitetural e decisões de engenharia de software de nível sénior:
-
-### 1. "Por que usaste Redis e como desenhaste o caching?"
-> *"Utilizei Redis 7 para implementar o padrão **Cache-Aside**. Em vez de calcular repetidamente a fórmula de Haversine e aceder à base de dados para obter coordenadas geográficas de cidades portuguesas a cada pesquisa de viagem, o `location-service` verifica primeiro a memória cache. Configurei o `RedisCacheManager` com `GenericJackson2JsonRedisSerializer` para garantir que o payload em cache seja JSON legível e agnóstico de versão Java, evitando problemas com serialização binária padrão do JDK."*
-
-### 2. "Como geriste a tolerância a falhas na comunicação síncrona?"
-> *"A comunicação entre serviços é feita via clientes declarativos Spring Cloud OpenFeign protegidos por **Resilience4j Circuit Breakers**. Se o `location-service` ou o `vehicle-service` ficarem indisponíveis ou degradados, o circuito abre automaticamente, evitando que threads do `trip-service` fiquem presas em cascata, e dispara métodos de fallback que devolvem estimativas padrão com aviso no log."*
-
-### 3. "Como desenhaste a mensageria e por que escolheste RabbitMQ?"
-> *"Usei **RabbitMQ** com uma `TopicExchange` (`carpooling.topic`) para eventos de ciclo de vida (`trip.created`, `reservation.requested`, `reservation.confirmed`). O microsserviço de notificações consome estas mensagens de forma assíncrona. Isto desacopla o tempo de resposta da UI da entrega de emails/alertas: o passageiro recebe confirmação em milissegundos sem esperar pela geração de emails."*
-
-### 4. "Como monitorizas o ecossistema em produção?"
-> *"Configurei o **Micrometer Prometheus Actuator** em todos os microsserviços, que expõem endpoints `/actuator/prometheus`. O **Prometheus** efetua o scrape periódico das métricas dos 9 nós e o **Grafana** consome esses dados num dashboard corporativo pré-provisionado na porta `3001`. Monitorizamos os chamados 'Four Golden Signals': Latência, Tráfego (RPS), Erros HTTP (4xx/5xx) e Saturação (uso de heap memory e garbage collection)."*
-
-### 5. "Como garantiste a testabilidade do código?"
-> *"Apliquei os princípios **SOLID**, especificamente o **Dependency Inversion Principle (DIP)**. No `trip-service`, desacoplei a classe concreta do broker através da interface `AmqpTemplate`, permitindo que os testes unitários com **Mockito** e **JUnit 5** testem toda a lógica de negócio transacional (divisão de custos, validação de capacidade de lugares e cálculo de poupança de CO2) em milissegundos sem necessidade de levantar um broker real ou base de dados."*
-
 ## 🧪 Estrutura dos Módulos Maven
 
 ```
