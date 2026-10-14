@@ -11,6 +11,7 @@
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-yellow.svg)](https://resilience4j.readme.io/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-15%20Containers-2496ED.svg)](https://www.docker.com/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900.svg)](https://leafletjs.com/)
+[![CI Pipeline](https://github.com/RafaCr3z/car-pooling-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/RafaCr3z/car-pooling-platform/actions)
 
 Plataforma distribuída de car pooling desenvolvida no âmbito da unidade curricular de **Aplicações Distribuídas 2025/2026** da **Escola Superior de Tecnologia de Castelo Branco (EST-IPCB)** pelo aluno **Rafael Cruz**.
 
