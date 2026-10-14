@@ -45,7 +45,7 @@ logging:
     root: INFO
     com.carpooling: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
 
 springdoc:
   api-docs:
@@ -64,3 +64,9 @@ management:
       show-details: always
     prometheus:
       enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://tempo:4318/v1/traces}

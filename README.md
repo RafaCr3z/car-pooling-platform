@@ -9,11 +9,14 @@
 [![Rate Limiting](https://img.shields.io/badge/Rate%20Limiting-Redis%20Token%20Bucket-red.svg)](https://redis.io/)
 [![Resilience](https://img.shields.io/badge/RabbitMQ-DLQ%20%2B%20Exponential%20Backoff-orange.svg)](https://www.rabbitmq.com/)
 [![Redis](https://img.shields.io/badge/Redis-7%20Cache--Aside-DC382D.svg)](https://redis.io/)
+[![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-OTel%20Tracing-0052CC.svg)](https://opentelemetry.io/)
 [![Prometheus](https://img.shields.io/badge/Prometheus-Metrics%20Engine-E6522C.svg)](https://prometheus.io/)
+[![Tempo](https://img.shields.io/badge/Grafana%20Tempo-Distributed%20Tracing%203200-F46800.svg)](https://grafana.com/oss/tempo/)
+[![Loki](https://img.shields.io/badge/Grafana%20Loki-Centralized%20Logs%203100-F46800.svg)](https://grafana.com/oss/loki/)
 [![Grafana](https://img.shields.io/badge/Grafana-Observability%203001-F46800.svg)](https://grafana.com/)
 [![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(31)-25A162.svg)](https://junit.org/junit5/)
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-yellow.svg)](https://resilience4j.readme.io/)
-[![Docker Compose](https://img.shields.io/badge/Docker%20Compose-15%20Containers-2496ED.svg)](https://www.docker.com/)
+[![Docker Compose](https://img.shields.io/badge/Docker%20Compose-18%20Containers-2496ED.svg)](https://www.docker.com/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900.svg)](https://leafletjs.com/)
 [![CI Pipeline](https://github.com/RafaCr3z/car-pooling-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/RafaCr3z/car-pooling-platform/actions)
 
@@ -224,14 +227,19 @@ A comunicação síncrona entre microsserviços via **Spring Cloud OpenFeign** �
 - **Isolamento de Falhas:** Se o `location-service` ou o `vehicle-service` ficarem indisponíveis, o circuito transita para o estado `OPEN`.
 - **Degradação Graciosa (*Graceful Degradation*):** Métodos de *fallback* previamente definidos no `trip-service` e no `admin-service` devolvem estimativas padrão de distância e consumo com registo de advertência em log, impedindo a exaustão de threads no Tomcat e garantindo que o utilizador consegue concluir a operação.
 
-### 4.6 Observabilidade Centralizada (*Prometheus & Grafana*)
-Todos os microsserviços da infraestrutura incluem o **Spring Boot Actuator** com suporte a **Micrometer Prometheus**:
-- **Endpoints de Telemetria:** `/actuator/prometheus` expostos e colhidos a cada 5 segundos pelo servidor **Prometheus (:9090)**.
-- **Painel Corporativo:** O **Grafana (:3001)** consome o Prometheus como fonte de dados e disponibiliza um dashboard unificado em modo escuro monitorizando os *Four Golden Signals*:
-  - **Latência:** Tempo de resposta HTTP nos percentis P95 e P99.
-  - **Tráfego:** Requisições por segundo (RPS) por microsserviço.
-  - **Erros:** Distribuição percentual de códigos HTTP (2xx, 4xx, 5xx).
-  - **Saturação:** Memória Heap da JVM em tempo real, coletas de Garbage Collection e contagem de threads ativas no Tomcat.
+### 4.6 Observabilidade Cloud-Native: Stack LGTM (Prometheus, Grafana, Tempo & Loki)
+A plataforma implementa a arquitetura corporativa **Grafana LGTM** (*Loki, Grafana, Tempo, Metrics/Prometheus*), garantindo correlação bidirecional entre os três pilares da observabilidade:
+1. **Métricas de Performance (*Prometheus :9090*):**
+   - Endpoints `/actuator/prometheus` agregados dinamicamente via Micrometer.
+   - Monitorização dos *Four Golden Signals* (Latência P95/P99, Taxa de Erros HTTP, Throughput RPS, e Saturação da Memória Heap da JVM).
+2. **Distributed Tracing (*OpenTelemetry + Grafana Tempo :3200 / OTLP :4318*):**
+   - Cada requisição que entra no `api-gateway` recebe um `traceId` único padrão W3C Trace Context.
+   - O `traceId` e `spanId` são propagados automaticamente através das chamadas síncronas OpenFeign e mensagens assíncronas do RabbitMQ.
+   - O **Grafana Tempo** recebe telemetria OTLP e renderiza gráficos de cascata (*waterfall*) detalhando o tempo exato consumido em cada salto distribuído.
+3. **Logs Estruturados & Centralizados (*Grafana Loki :3100 + Promtail :9080*):**
+   - Todos os microsserviços emitem logs estruturados correlacionados: `[app-name,traceId,spanId]`.
+   - O **Promtail** efetua o *scraping* automático dos contentores Docker e envia para o **Loki**.
+   - **Correlação Bidirecional em 1 Clique:** No Grafana, clicar numa linha de log no Loki com `traceId` abre imediatamente a árvore de execução no Tempo; inversamente, selecionar um span no Tempo lista de imediato os logs emitidos durante essa fração de segundo no Loki.
 
 ### 4.7 Resiliência de Mensageria: Dead Letter Queue (DLQ) & Backoff Exponencial
 Para assegurar que falhas de processamento em consumidores não bloqueiam a fila principal nem descartam silenciosamente eventos vitais do negócio:
@@ -345,7 +353,7 @@ Na raiz do projeto:
 mvn clean test
 ```
 
-### 8.2 Inicialização do Ecossistema Completo (15 Contentores)
+### 8.2 Inicialização do Ecossistema Completo (18 Contentores)
 Para construir as imagens e inicializar toda a infraestrutura em segundo plano:
 
 ```bash
@@ -365,8 +373,10 @@ docker compose up -d --build
 | **Documentação Centralizada OpenAPI 3 / Swagger UI** | [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) | Acesso livre (agrega Auth, Trip, Vehicle, Payment, Location, Admin) |
 | **Aplicação Web Principal** | [http://localhost:3000](http://localhost:3000) | Acesso livre / Login disponível |
 | **Painel de Moderação & KPIs**| [http://localhost:3000/admin](http://localhost:3000/admin) | `admin@carpooling.pt` / `admin123` |
-| **Cockpit Grafana** | [http://localhost:3001](http://localhost:3001) | Acesso direto / `admin` / `admin` |
-| **Prometheus Engine** | [http://localhost:9090](http://localhost:9090) | Acesso direto |
+| **Cockpit Grafana (LGTM Dashboard)** | [http://localhost:3001](http://localhost:3001) | Acesso direto / `admin` / `admin` |
+| **Prometheus Engine (Métricas)** | [http://localhost:9090](http://localhost:9090) | Acesso direto |
+| **Grafana Tempo (Distributed Tracing OTLP)** | [http://localhost:3200](http://localhost:3200) | Acesso via Grafana / Porta OTLP `:4318` |
+| **Grafana Loki (Centralized Logging)** | [http://localhost:3100](http://localhost:3100) | Acesso via Grafana / Push API `:3100` |
 | **Netflix Eureka Registry** | [http://localhost:8761](http://localhost:8761) | Acesso direto |
 | **RabbitMQ Management** | [http://localhost:15672](http://localhost:15672) | `guest` / `guest` |
 | **API Gateway** | [http://localhost:8080](http://localhost:8080) | Ponto único de roteamento REST |
