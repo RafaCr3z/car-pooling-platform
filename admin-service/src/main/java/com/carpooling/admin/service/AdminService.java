@@ -43,7 +43,7 @@ public class AdminService {
                 .orElse(5.0);
 
         long totalTrips = trips.size();
-        long activeTrips = trips.stream().filter(t -> "SCHEDULED".equalsIgnoreCase(t.getStatus()) || "ACTIVE".equalsIgnoreCase(t.getStatus()) || "STARTED".equalsIgnoreCase(t.getStatus())).count();
+        long activeTrips = trips.stream().filter(t -> "OPEN".equalsIgnoreCase(t.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(t.getStatus()) || "SCHEDULED".equalsIgnoreCase(t.getStatus()) || "ACTIVE".equalsIgnoreCase(t.getStatus()) || "STARTED".equalsIgnoreCase(t.getStatus())).count();
         long completedTrips = trips.stream().filter(t -> "COMPLETED".equalsIgnoreCase(t.getStatus())).count();
         long cancelledTrips = trips.stream().filter(t -> "CANCELLED".equalsIgnoreCase(t.getStatus())).count();
 
