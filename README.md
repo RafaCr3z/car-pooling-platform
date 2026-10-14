@@ -14,6 +14,16 @@
 
 Plataforma avançada de **Car Pooling** desenvolvida para a unidade curricular de **Aplicações Distribuídas 2025/2026** (EST-IPCB). O sistema implementa uma arquitetura orientada a microsserviços empresariais, com comunicação orientada a eventos (**Event-Driven**) via RabbitMQ, cache distribuído com **Redis 7** (Cache-Aside), observabilidade total com **Prometheus e Grafana**, tolerância a falhas com **Circuit Breakers** (Resilience4j), testes unitários automatizados (**JUnit 5 + Mockito**), cálculo automático de despesas de viagem (combustível e portagens), métricas ambientais de poupança de **CO2** e moderação administrativa em tempo real.
 
+## 📸 Galeria Visual da Plataforma
+
+> 💡 **Galeria Completa de Telas:** Consulta o documento [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) para visualizar todas as 12 capturas de ecrã em alta resolução com explicações detalhadas de cada fluxo.
+
+| Pesquisa de Viagens & Mapas Interativos (Leaflet.js) | Cockpit de Observabilidade Corporativo (Grafana :3001) |
+| :---: | :---: |
+| [![Pesquisa Leaflet](docs/screenshots/05_search_trips_leaflet.png)](docs/SCREENSHOTS.md#15-pesquisa-de-viagens-dispon%C3%ADveis-com-rotas-em-mapa) | [![Grafana Observability](docs/screenshots/11_grafana_observability.png)](docs/SCREENSHOTS.md#21-cockpit-de-observabilidade-no-grafana-3001) |
+| **Painel Administrativo & Métricas de Sustentabilidade** | **Registo de Microsserviços (Netflix Eureka :8761)** |
+| [![Admin Dashboard](docs/screenshots/08_admin_dashboard.png)](docs/SCREENSHOTS.md#18-cockpit-de-administra%C3%A7%C3%A3o--modera%C3%A7%C3%A3o) | [![Eureka Registry](docs/screenshots/09_eureka_registry.png)](docs/SCREENSHOTS.md#22-netflix-eureka-service-discovery-8761) |
+
 ---
 
 ## 🏛️ Arquitetura do Sistema
@@ -232,12 +242,18 @@ Para facilitar a apresentação numa entrevista ou avaliação, o sistema inicia
    - Fazer login com `admin@carpooling.pt` e aceder a `/admin`.
    - Demonstrar os KPIs: total de CO2 evitado ($kg$), equivalência em **árvores adultas salvas**, total de euros transacionados e média de rating.
    - Demonstrar o controlo de moderação com o botão **Bloquear / Desbloquear** e o registo de auditoria com timestamp na tabela inferior.
-6. **Execução de Testes Unitários Automatizados:**
+6. **Execução de Testes Unitários Automatizados (24 Testes):**
    - No terminal, executar:
      ```bash
-     mvn test -pl location-service,trip-service
+     mvn test -pl auth-service,trip-service,vehicle-service,payment-service,location-service,admin-service
      ```
-   - Demonstrar a suite de testes **JUnit 5 + Mockito** a validar regras críticas de negócio em poucos segundos sem depender de infraestrutura externa.
+   - Demonstrar a suite completa de **24 testes unitários JUnit 5 + Mockito** a validar regras críticas de negócio com **100% de aprovação**:
+     - `auth-service` (5 testes): autenticação válida, bloqueio de credenciais inválidas, proteção de contas suspensas por moderação, rejeição de emails duplicados e recálculo da média ponderada de ratings.
+     - `trip-service` (4 testes): repartição de custos por passageiro, ciclo de pedido de reserva, validação de capacidade de lugares e cálculo de poupança de $CO_2$.
+     - `vehicle-service` (4 testes): valores padrão de consumo e emissões, suporte a viaturas elétricas (0 consumo/emissões), filtragem de frota por condutor e atualização de estados.
+     - `payment-service` (4 testes): geração de transações simuladas MBWay (`MBWAY-XXXX`), pagamentos por cartão (`CARD-XXXX`), pesquisa por identificador único de transação e tratamento de exceções.
+     - `location-service` (5 testes): cálculo trigonométrico Haversine, tempo estimado de viagem, geocodificação de cidades portuguesas e cálculo de despesas com portagens.
+     - `admin-service` (2 testes): agregação de métricas globais, fórmula de equivalência em árvores adultas salvas ($CO_2 / 22$) e registo de logs de auditoria na moderação.
 
 ---
 
