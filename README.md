@@ -7,28 +7,47 @@
 [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Event--Driven-orange.svg)](https://www.rabbitmq.com/)
 [![Prometheus](https://img.shields.io/badge/Prometheus-Metrics%20Engine-E6522C.svg)](https://prometheus.io/)
 [![Grafana](https://img.shields.io/badge/Grafana-Observability%203001-F46800.svg)](https://grafana.com/)
-[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests-25A162.svg)](https://junit.org/junit5/)
+[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(24)-25A162.svg)](https://junit.org/junit5/)
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-yellow.svg)](https://resilience4j.readme.io/)
-[![Docker Compose](https://img.shields.io/badge/Docker%20Compose-Microservices-2496ED.svg)](https://www.docker.com/)
+[![Docker Compose](https://img.shields.io/badge/Docker%20Compose-15%20Containers-2496ED.svg)](https://www.docker.com/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900.svg)](https://leafletjs.com/)
 
-Plataforma avançada de **Car Pooling** desenvolvida para a unidade curricular de **Aplicações Distribuídas 2025/2026** (EST-IPCB). O sistema implementa uma arquitetura orientada a microsserviços empresariais, com comunicação orientada a eventos (**Event-Driven**) via RabbitMQ, cache distribuído com **Redis 7** (Cache-Aside), observabilidade total com **Prometheus e Grafana**, tolerância a falhas com **Circuit Breakers** (Resilience4j), testes unitários automatizados (**JUnit 5 + Mockito**), cálculo automático de despesas de viagem (combustível e portagens), métricas ambientais de poupança de **CO2** e moderação administrativa em tempo real.
+Plataforma distribuída de car pooling desenvolvida no âmbito da unidade curricular de **Aplicações Distribuídas 2025/2026** da **Escola Superior de Tecnologia de Castelo Branco (EST-IPCB)** pelo aluno **Rafael Cruz**.
 
-## 📸 Galeria Visual da Plataforma
-
-> 💡 **Galeria Completa de Telas:** Consulta o documento [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) para visualizar todas as 12 capturas de ecrã em alta resolução com explicações detalhadas de cada fluxo.
-
-| Pesquisa de Viagens & Mapas Interativos (Leaflet.js) | Cockpit de Observabilidade Corporativo (Grafana :3001) |
-| :---: | :---: |
-| [![Pesquisa Leaflet](docs/screenshots/05_search_trips_leaflet.png)](docs/SCREENSHOTS.md#15-pesquisa-de-viagens-dispon%C3%ADveis-com-rotas-em-mapa) | [![Grafana Observability](docs/screenshots/11_grafana_observability.png)](docs/SCREENSHOTS.md#21-cockpit-de-observabilidade-no-grafana-3001) |
-| **Painel Administrativo & Métricas de Sustentabilidade** | **Registo de Microsserviços (Netflix Eureka :8761)** |
-| [![Admin Dashboard](docs/screenshots/08_admin_dashboard.png)](docs/SCREENSHOTS.md#18-cockpit-de-administra%C3%A7%C3%A3o--modera%C3%A7%C3%A3o) | [![Eureka Registry](docs/screenshots/09_eureka_registry.png)](docs/SCREENSHOTS.md#22-netflix-eureka-service-discovery-8761) |
+O sistema implementa uma arquitetura orientada a microsserviços empresariais com comunicação síncrona resiliente (OpenFeign + Circuit Breakers Resilience4j), comunicação assíncrona orientada a eventos (RabbitMQ Topic Exchange), cache distribuído de alto desempenho (Redis 7 com padrão Cache-Aside), telemetria e observabilidade em tempo real (Prometheus e Grafana), isolamento estrito de dados por serviço (Database-per-Service no PostgreSQL), validação com suíte de testes unitários automatizados (JUnit 5 + Mockito) e interface responsiva com cartografia interativa (Leaflet.js e OpenStreetMap).
 
 ---
 
-## 🏛️ Arquitetura do Sistema
+## 📑 Índice Geral
 
-A aplicação é composta por microsserviços desacoplados orquestrados através de um **API Gateway**, com registo e descoberta dinâmica pelo **Netflix Eureka**, mensageria assíncrona por **RabbitMQ**, cache distribuído com **Redis** e observabilidade centralizada com **Prometheus e Grafana**:
+1. [Enquadramento & Objetivos do Projeto](#-1-enquadramento--objetivos-do-projeto)
+2. [Arquitetura Geral do Sistema Distribuído](#-2-arquitetura-geral-do-sistema-distribuído)
+3. [Especificação Detalhada dos Microsserviços](#-3-especificação-detalhada-dos-microsserviços)
+4. [Padrões de Desenho & Engenharia de Sistemas Distribuídos](#-4-padrões-de-desenho--engenharia-de-sistemas-distribuídos)
+5. [Modelos Matemáticos & Fórmulas de Negócio](#-5-modelos-matemáticos--fórmulas-de-negócio)
+6. [Galeria Visual da Plataforma](#-6-galeria-visual-da-plataforma)
+7. [Estrutura dos Módulos do Repositório](#-7-estrutura-dos-módulos-do-repositório)
+8. [Instalação, Configuração & Execução](#-8-instalação-configuração--execução)
+9. [Guia de Demonstração & Validação Funcional dos Casos de Uso](#-9-guia-de-demonstração--validação-funcional-dos-casos-de-uso)
+10. [Suíte de Testes Automatizados (JUnit 5 + Mockito)](#-10-suíte-de-testes-automatizados-junit-5--mockito)
+11. [Identificação do Projeto & Autoria](#-11-identificação-do-projeto--autoria)
+
+---
+
+## 🎯 1. Enquadramento & Objetivos do Projeto
+
+A mobilidade rodoviária em Portugal enfrenta dois desafios estruturais: a sobrecarga financeira provocada pelo custo de combustíveis fósseis e taxas de portagens nas autoestradas nacionais (ex.: A1, A23, A2, A3), e o impacto ambiental decorrente do uso individual de viaturas ligeiras.
+
+A plataforma **CarPooling PT** foi concebida para interligar as principais cidades do país (ex.: Castelo Branco, Lisboa, Porto, Coimbra, Faro, Braga, Évora), oferecendo:
+- **Divisão Justa de Custos:** Algoritmo que pondera a distância rodoviária, o consumo médio homologado da viatura do condutor ($L/100\text{km}$) e as portagens reais da rota, dividindo equitativamente o montante entre os ocupantes.
+- **Transparência Ecológica:** Cálculo exato da poupança de emissões de dióxido de carbono ($\text{CO}_2$) face à circulação de múltiplos veículos, traduzida em métricas compreensíveis como árvores adultas salvas por ano.
+- **Alta Disponibilidade & Desacoplamento:** Garantia de que falhas transitórias em serviços auxiliares (notificações, geocodificação ou viaturas) não impeçam a continuidade operacional do núcleo de viagens e reservas.
+
+---
+
+## 🏛️ 2. Arquitetura Geral do Sistema Distribuído
+
+A solução adota uma topologia de microsserviços desacoplados e conteinerizados, orquestrados através de um **API Gateway** reativo com registo dinâmico no **Netflix Eureka**, mensageria assíncrona por **RabbitMQ**, aceleração por **Redis 7** e instrumentação métrica unificada com **Prometheus e Grafana**:
 
 ```mermaid
 flowchart TD
@@ -118,7 +137,47 @@ flowchart TD
 
 ---
 
-## ⚡ Fluxo de Car Pooling & Eventos Assíncronos
+## 🧩 3. Especificação Detalhada dos Microsserviços
+
+O sistema divide-se em **12 módulos independentes** geridos por um POM agregador pai:
+
+| Módulo | Porta | Base de Dados / Armazenamento | Responsabilidade de Domínio | Principais Endpoints REST |
+| :--- | :---: | :--- | :--- | :--- |
+| **`eureka-server`** | `8761` | Memória / Heartbeats | Service Discovery & Registry do ecossistema Spring Cloud Netflix | `/eureka/apps` |
+| **`api-gateway`** | `8080` | Netty Reativo | Ponto único de entrada, roteamento dinâmico, balanceamento e CORS | `/api/**` |
+| **`auth-service`** | `8081` | `carpooling_auth` (PostgreSQL) | Gestão de utilizadores, autenticação JWT, perfis, reputação e avaliações | `POST /api/auth/login`<br/>`POST /api/auth/register`<br/>`GET /api/users/{id}` |
+| **`trip-service`** | `8082` | `carpooling_trips` (PostgreSQL) | Gestão do ciclo de vida de viagens, reservas de lugares e cálculo de custos | `GET /api/trips`<br/>`POST /api/trips`<br/>`POST /api/trips/{id}/reservations` |
+| **`vehicle-service`** | `8083` | `carpooling_vehicles` (PostgreSQL) | Gestão da frota automóvel dos condutores, consumos e emissões de carbono | `GET /api/vehicles`<br/>`POST /api/vehicles`<br/>`GET /api/vehicles/driver/{id}` |
+| **`payment-service`** | `8084` | `carpooling_payments` (PostgreSQL) | Processamento e liquidação de pagamentos simulados (MBWay, Cartão, Wallet) | `POST /api/payments/process`<br/>`GET /api/payments/total`<br/>`GET /api/payments/trip/{id}` |
+| **`location-service`** | `8085` | `redis` (Cache Distribuído) | Catálogo geográfico de cidades PT, cálculo de distâncias Haversine e portagens | `GET /api/locations/cities`<br/>`GET /api/locations/route`<br/>`GET /api/locations/distance` |
+| **`notification-service`** | `8086` | `carpooling_notifications` (PostgreSQL) | Consumidor RabbitMQ, persistência de alertas e histórico de notificações | `GET /api/notifications/user/{id}`<br/>`PUT /api/notifications/{id}/read` |
+| **`admin-service`** | `8087` | `carpooling_admin` (PostgreSQL) | Agregação de métricas globais, moderação de utilizadores e auditoria | `GET /api/admin/metrics`<br/>`GET /api/admin/users`<br/>`PUT /api/admin/users/{id}/block` |
+| **`frontend-service`** | `3000` | Sessão Web (Spring MVC) | Interface de utilizador com Thymeleaf, Bootstrap 5 e Leaflet.js | `GET /`<br/>`GET /login`<br/>`GET /trips/search`<br/>`GET /admin` |
+| **`common-lib`** | — | — | Biblioteca transversal com DTOs partilhados e contratos de eventos AMQP | — |
+| **`prometheus / grafana`** | `9090` / `3001` | Time-Series Engine | Telemetria centralizada de latência, taxa de erros, JVM heap e threads | Actuator Scrapes & Dashboards |
+
+---
+
+## ⚙️ 4. Padrões de Desenho & Engenharia de Sistemas Distribuídos
+
+### 4.1 Isolamento de Persistência (*Database-per-Service*)
+Cada microsserviço transacional é proprietário da sua respetiva base de dados PostgreSQL (`carpooling_auth`, `carpooling_trips`, `carpooling_vehicles`, `carpooling_payments`, `carpooling_notifications`, `carpooling_admin`), garantindo:
+- Independência no esquema relacional e migrações.
+- Prevenção de acoplamento direto entre tabelas de domínios distintos.
+- Comunicação inter-serviços estritamente efetuada através de APIs REST tipadas ou eventos.
+
+### 4.2 Descoberta Dinâmica de Serviços (*Netflix Eureka*)
+- Cada instância dos serviços regista-se dinamicamente no Eureka (`eureka-server:8761`) indicando o seu endereço IP e porta.
+- O `api-gateway` e os clientes declarativos **OpenFeign** resolvem instâncias pelo nome lógico da aplicação (ex.: `http://TRIP-SERVICE/api/trips`), aplicando automaticamente balanceamento de carga do lado do cliente (*Client-Side Load Balancing*).
+- O registo opera com renovação periódica por *heartbeats* (a cada 30 segundos).
+
+### 4.3 Comunicação Assíncrona & Desacoplamento (*RabbitMQ Topic Exchange*)
+Para evitar bloqueios de I/O em operações que não requerem resposta imediata para a conclusão da requisição do cliente, a plataforma utiliza mensageria assíncrona:
+- **Exchange:** `carpooling.topic` (Topic Exchange durável).
+- **Filas Duráveis:**
+  - `notification.trip.queue`: Vinculada à chave de encaminhamento `trip.*`.
+  - `notification.reservation.queue`: Vinculada à chave de encaminhamento `reservation.*`.
+- **Garantia de Entrega:** O `notification-service` processa as mensagens de forma assíncrona, desacoplando o tempo de resposta da interface gráfica da geração de notificações e auditorias.
 
 ```mermaid
 sequenceDiagram
@@ -149,135 +208,207 @@ sequenceDiagram
     AdminSvc->>AdminSvc: Agrega poupança de CO2 e calcula equivalência em árvores
 ```
 
----
+### 4.4 Caching Distribuído de Baixa Latência (*Redis 7 — Cache-Aside*)
+O microsserviço de localização (`location-service`) recorre a uma instância dedicada do **Redis 7** operando no padrão **Cache-Aside**:
+- **Chaves de Cache:** `cities:all`, `route:{origem}:{destino}`.
+- **Serializador:** `GenericJackson2JsonRedisSerializer` em conjunto com `StringRedisSerializer`, assegurando payloads em formato JSON legível e desacoplado de versões específicas do Java.
+- **Impacto de Desempenho:** Evita execuções repetitivas da fórmula trigonométrica de Haversine e consultas ao repositório geográfico em rotas pesquisadas com frequência, reduzindo a latência da chamada em mais de 90%.
 
-## 🌟 Principais Diferenciais Técnicos
+### 4.5 Tolerância a Falhas & Resiliência (*Resilience4j + Fallbacks*)
+A comunicação síncrona entre microsserviços via **Spring Cloud OpenFeign** é protegida por **Circuit Breakers** configurados via **Resilience4j**:
+- **Isolamento de Falhas:** Se o `location-service` ou o `vehicle-service` ficarem indisponíveis, o circuito transita para o estado `OPEN`.
+- **Degradação Graciosa (*Graceful Degradation*):** Métodos de *fallback* previamente definidos no `trip-service` e no `admin-service` devolvem estimativas padrão de distância e consumo com registo de advertência em log, impedindo a exaustão de threads no Tomcat e garantindo que o utilizador consegue concluir a operação.
 
-| Componente | Implementação & Vantagem Empresarial |
-| :--- | :--- |
-| **Distributed Caching (Redis 7)** | Implementação do padrão **Cache-Aside** com `GenericJackson2JsonRedisSerializer` e TTL. Caching distribuído de coordenadas de cidades e matrizes de cálculo de rota, reduzindo em >90% o tempo de resposta em chamadas repetidas e aliviando a carga na base de dados. |
-| **Observabilidade Total (Prometheus & Grafana)** | Infraestrutura completa de telemetria baseada em métricas **Micrometer Actuator** expostas em todos os microsserviços. Scrape centralizado pelo **Prometheus (:9090)** e dashboard corporativo provisionado automaticamente no **Grafana (:3001)** monitorizando latência HTTP, RPS, heap memory e GC da JVM. |
-| **Testes Automatizados (JUnit 5 + Mockito)** | Suite rigorosa de testes unitários isolando regras de negócio centrais (repartição de custos, cálculo Haversine, cálculo de CO2 e validação de lugares). Refatoração com **Princípio da Inversão de Dependência (SOLID)** desacoplando mensageria (`AmqpTemplate`). |
-| **Event-Driven Architecture** | Desacoplamento assíncrono com **RabbitMQ** (Topic Exchanges, Queues duráveis, DLQ). Os serviços transacionais não bloqueiam à espera do envio de emails/notificações. |
-| **Resiliência & Tolerância a Falhas** | Clientes **OpenFeign** protegidos com **Resilience4j Circuit Breakers** e fallbacks graceful. Se o `location-service` ou `vehicle-service` oscilar, o `trip-service` continua operacional. |
-| **Motor de Custos & Sustentabilidade** | Base de dados geográfica de cidades de Portugal. Cálculo automático de despesas partilhadas com base no consumo do carro do condutor ($L/100\text{km}$), portagens e modelo de poupança ecológica ($0.115\text{ kg CO}_2/\text{km} \times \text{lugares}$). |
-| **Moderação & Avaliações 1–5★** | Sistema de reputação peer-to-peer com contagem de reviews e média ponderada. Painel administrativo para suspensão de contas fraudulentas e registo de logs de auditoria. |
-| **Mapas Interativos** | Integração de mapas **OpenStreetMap / Leaflet.js** para visualização do trajeto de viagem e marcadores em tempo real. |
-| **CI/CD Integrado** | Pipeline em **GitHub Actions** (`.github/workflows/ci.yml`) que compila, testa e valida as configurações do Compose a cada push/PR. |
-
----
-
-## 🚀 Como Executar o Projeto
-
-### Pré-requisitos
-- **Docker Desktop** (com Docker Compose v2+)
-- **Java 17+** e **Maven 3.9+** (opcional caso compile fora do Docker)
-
-### 1. Inicialização Rápida com Docker Compose
-Na pasta raiz do projeto:
-
-```bash
-# Compilar os microsserviços e correr a suite de testes unitários
-mvn clean test
-
-# Compilar pacotes JAR
-mvn package -DskipTests
-
-# Iniciar todos os contentores em background (15 containers)
-docker compose up -d --build
-```
-
-*Ou no Windows, basta dar duplo clique em `start.bat`.*
-
-### 2. Endpoints e Portais Disponíveis
-
-| Serviço / Portal | URL | Descrição |
-| :--- | :--- | :--- |
-| **Frontend Web** | [http://localhost:3000](http://localhost:3000) | Interface gráfica completa (Login, Pesquisa, Mapas, Viagens, Admin) |
-| **Cockpit Grafana** | [http://localhost:3001](http://localhost:3001) | Dashboard de Observabilidade dos Microsserviços (`admin` / `admin`) |
-| **Prometheus** | [http://localhost:9090](http://localhost:9090) | Time-Series Metrics Engine, Targets de Actuator e Scrapes |
-| **Redis Cache** | `localhost:6379` | Servidor de Cache Distribuído em Memória (Redis 7 Alpine) |
-| **API Gateway** | [http://localhost:8080](http://localhost:8080) | Ponto único de entrada com roteamento dinâmico para os microsserviços |
-| **Eureka Server** | [http://localhost:8761](http://localhost:8761) | Dashboard do Service Registry com status `UP` de cada instância |
-| **RabbitMQ Management** | [http://localhost:15672](http://localhost:15672) | Gestão de Queues, Exchanges e Mensagens (`guest` / `guest`) |
-| **Painel de Administração** | [http://localhost:3000/admin](http://localhost:3000/admin) | KPIs Globais, Métrica de Árvores Salvas e Moderação de Utilizadores |
+### 4.6 Observabilidade Centralizada (*Prometheus & Grafana*)
+Todos os microsserviços da infraestrutura incluem o **Spring Boot Actuator** com suporte a **Micrometer Prometheus**:
+- **Endpoints de Telemetria:** `/actuator/prometheus` expostos e colhidos a cada 5 segundos pelo servidor **Prometheus (:9090)**.
+- **Painel Corporativo:** O **Grafana (:3001)** consome o Prometheus como fonte de dados e disponibiliza um dashboard unificado em modo escuro monitorizando os *Four Golden Signals*:
+  - **Latência:** Tempo de resposta HTTP nos percentis P95 e P99.
+  - **Tráfego:** Requisições por segundo (RPS) por microsserviço.
+  - **Erros:** Distribuição percentual de códigos HTTP (2xx, 4xx, 5xx).
+  - **Saturação:** Memória Heap da JVM em tempo real, coletas de Garbage Collection e contagem de threads ativas no Tomcat.
 
 ---
 
-## 👥 Contas de Demonstração Pré-Carregadas
+## 📐 5. Modelos Matemáticos & Fórmulas de Negócio
 
-Para facilitar a apresentação numa entrevista ou avaliação, o sistema inicializa automaticamente com dados realistas:
+### 5.1 Distância Geodésica Rodoviária (Fórmula de Haversine)
+A distância ortodrómica entre a cidade de origem $(\phi_1, \lambda_1)$ e destino $(\phi_2, \lambda_2)$ em coordenadas esféricas (raio da Terra $R = 6371\text{ km}$) é obtida por:
 
-| Papel | Email | Palavra-passe | Perfil de Demonstração |
-| :--- | :--- | :--- | :--- |
-| **Condutor** | `joao.silva@carpooling.pt` | `password123` | Condutor ativo com **Peugeot 208 PureTech** (5.2 L/100km). Avaliação 4.9★. Viagem ativa Castelo Branco -> Lisboa. |
-| **Passageira** | `maria.santos@carpooling.pt` | `password123` | Aluna do IPCB, procura boleias regulares. Avaliação 5.0★. |
-| **Condutor 2** | `carlos.mendes@carpooling.pt` | `password123` | Condutor com **Renault Megane dCi** (4.8 L/100km). Viagem Covilhã -> Porto. |
-| **Administrador**| `admin@carpooling.pt` | `admin123` | Acesso ao painel `/admin` para métricas globais e moderação. |
+$$a = \sin^2\left(\frac{\Delta \phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta \lambda}{2}\right)$$
 
-*(A página de Login `/login` dispõe de botões de 1-clique para preenchimento imediato).*
+$$d_{\text{geodésica}} = 2R \cdot \arcsin\left(\sqrt{a}\right)$$
 
----
+Para converter a linha reta geodésica em distância rodoviária realista em território português, aplica-se um coeficiente de sinuosidade médio das autoestradas e itinerários principais:
 
-## 🎯 Roteiro de Demonstração para Entrevista de Emprego
+$$d_{\text{rodoviária}} = d_{\text{geodésica}} \times 1.25$$
 
-1. **Apresentação da Arquitetura & Observabilidade:**
-   - Abrir o **Eureka Dashboard** ([localhost:8761](http://localhost:8761)) e mostrar todos os 8 microsserviços registados como `UP`.
-   - Abrir o **RabbitMQ Management** ([localhost:15672](http://localhost:15672)) e exibir a topic exchange `carpooling.topic` e as filas de notificações.
-   - Abrir o **Grafana Dashboard** ([localhost:3001](http://localhost:3001), `admin` / `admin`) e demonstrar as métricas em tempo real de latência, tráfego HTTP, CPU, threads do Tomcat e Heap Memory da JVM.
-   - Demonstrar o **Cache Distribuído Redis** em execução no terminal (`docker exec redis redis-cli KEYS "*"`), comprovando o armazenamento de rotas e catálogos serializados em JSON.
-2. **Ciclo do Condutor:**
-   - Entrar como `joao.silva@carpooling.pt`.
-   - Ir a **"Meus Veículos"** e mostrar a viatura com consumo de 5.2 L/100km e emissões de CO2.
-   - Ir a **"Publicar Viagem"**, selecionar `Castelo Branco` -> `Lisboa`. Mostrar o cálculo automático instantâneo de combustível (€19.80), portagens (€12.50), divisão por passageiro e trajeto desenhado no mapa Leaflet (com cache Redis).
-3. **Ciclo da Passageira:**
-   - Fazer logout e entrar como `maria.santos@carpooling.pt`.
-   - Ir a **"Procurar Boleias"**, ver os marcadores de rotas no mapa de Portugal e reservar 1 lugar na viagem do João com confirmação de pagamento simulado via MBWay.
-4. **Comunicação Assíncrona & Notificações:**
-   - Entrar novamente como João.
-   - Mostrar o sino de notificações e ir a **"Pedidos de Boleia Recebidos"**.
-   - Clicar em **"Aceitar Passageiro"**. Mostrar a confirmação imediata.
-   - Na lista **"Minhas Viagens"**, clicar em **"Iniciar"** e depois **"Concluir Viagem"**.
-5. **Métricas de Impacto & Governação no Painel Admin:**
-   - Fazer login com `admin@carpooling.pt` e aceder a `/admin`.
-   - Demonstrar os KPIs: total de CO2 evitado ($kg$), equivalência em **árvores adultas salvas**, total de euros transacionados e média de rating.
-   - Demonstrar o controlo de moderação com o botão **Bloquear / Desbloquear** e o registo de auditoria com timestamp na tabela inferior.
-6. **Execução de Testes Unitários Automatizados (24 Testes):**
-   - No terminal, executar:
-     ```bash
-     mvn test -pl auth-service,trip-service,vehicle-service,payment-service,location-service,admin-service
-     ```
-   - Demonstrar a suite completa de **24 testes unitários JUnit 5 + Mockito** a validar regras críticas de negócio com **100% de aprovação**:
-     - `auth-service` (5 testes): autenticação válida, bloqueio de credenciais inválidas, proteção de contas suspensas por moderação, rejeição de emails duplicados e recálculo da média ponderada de ratings.
-     - `trip-service` (4 testes): repartição de custos por passageiro, ciclo de pedido de reserva, validação de capacidade de lugares e cálculo de poupança de $CO_2$.
-     - `vehicle-service` (4 testes): valores padrão de consumo e emissões, suporte a viaturas elétricas (0 consumo/emissões), filtragem de frota por condutor e atualização de estados.
-     - `payment-service` (4 testes): geração de transações simuladas MBWay (`MBWAY-XXXX`), pagamentos por cartão (`CARD-XXXX`), pesquisa por identificador único de transação e tratamento de exceções.
-     - `location-service` (5 testes): cálculo trigonométrico Haversine, tempo estimado de viagem, geocodificação de cidades portuguesas e cálculo de despesas com portagens.
-     - `admin-service` (2 testes): agregação de métricas globais, fórmula de equivalência em árvores adultas salvas ($CO_2 / 22$) e registo de logs de auditoria na moderação.
+### 5.2 Repartição de Custos de Viagem
+O custo total da viagem é a soma do consumo real de combustível da viatura com as taxas de portagem:
+
+$$\text{Custo Combustível} = \left(\frac{d_{\text{rodoviária}}}{100}\right) \times \text{Consumo}_{\text{L/100km}} \times \text{Preço Combustível}$$
+
+O valor cobrado a cada passageiro é repartido igualmente entre todos os ocupantes (passageiros reservados + 1 condutor):
+
+$$\text{Custo por Passageiro} = \frac{\text{Custo Combustível} + \text{Portagens}}{\text{Total Ocupantes}}$$
+
+### 5.3 Métrica de Sustentabilidade & Equivalência Arbórea
+Cada passageiro que partilha a viatura evita a circulação de um veículo adicional, correspondendo a uma redução média estimada de **$0.115\text{ kg de CO}_2\text{ por quilómetro}$**:
+
+$$\text{CO}_{2\text{ poupado}} = d_{\text{rodoviária}} \times 0.115 \times \text{Lugares Ocupados}$$
+
+No painel de administração, o acumulado de carbono evitado é convertido no número equivalente de árvores adultas necessárias para absorver essa quantidade em um ano (base de $22\text{ kg de CO}_2/\text{ano}$ por árvore):
+
+$$\text{Árvores Salvas} = \frac{\sum \text{CO}_{2\text{ poupado}}}{22.0}$$
 
 ---
 
-## 🧪 Estrutura dos Módulos Maven
+## 📸 6. Galeria Visual da Plataforma
+
+A plataforma dispõe de interfaces completas validadas com dados realistas. A documentação completa com capturas de ecrã em alta resolução encontra-se no ficheiro [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md):
+
+| Fluxo / Ecrã | Visualização | Descrição Técnica |
+| :--- | :---: | :--- |
+| **Pesquisa & Rotas Leaflet** | [![Pesquisa](docs/screenshots/05_search_trips_leaflet.png)](docs/SCREENSHOTS.md#15-pesquisa-de-viagens-dispon%C3%ADveis-com-rotas-em-mapa) | Mapa interativo com geocodificação de cidades, polilinha de rota e cartões de boleias ativas. |
+| **Cockpit Grafana** | [![Grafana](docs/screenshots/11_grafana_observability.png)](docs/SCREENSHOTS.md#21-cockpit-de-observabilidade-no-grafana-3001) | Dashboard ao vivo em modo escuro com métricas de sistema (RPS, latência, JVM Heap e threads). |
+| **Painel de Moderação** | [![Admin](docs/screenshots/08_admin_dashboard.png)](docs/SCREENSHOTS.md#18-cockpit-de-administra%C3%A7%C3%A3o--modera%C3%A7%C3%A3o) | Visão agregada de KPIs ecológicos, volume de despesas partilhadas (€142.50) e moderação de contas. |
+| **Service Registry Eureka** | [![Eureka](docs/screenshots/09_eureka_registry.png)](docs/SCREENSHOTS.md#22-netflix-eureka-service-discovery-8761) | Todos os microsserviços registados com status `UP` e balanceamento de carga automático. |
+| **Prometheus Targets** | [![Prometheus](docs/screenshots/10_prometheus_targets.png)](docs/SCREENSHOTS.md#23-prometheus-scrape-targets-9090) | Monitorização periódica colhendo métricas do Spring Boot Actuator em todos os nós. |
+| **Filas do RabbitMQ** | [![RabbitMQ](docs/screenshots/12_rabbitmq_overview.png)](docs/SCREENSHOTS.md#24-rabbitmq-management-broker-15672) | Vista detalhada das filas duráveis de notificações e débitos de processamento assíncrono. |
+
+---
+
+## 📂 7. Estrutura dos Módulos do Repositório
 
 ```
 car-pooling-sharing/
-├── pom.xml                   # Parent POM com gestão unificada de versões e plugins
-├── common-lib/               # DTOs partilhados e modelos de eventos RabbitMQ
-├── eureka-server/            # Service Discovery (Spring Cloud Netflix Eureka)
-├── api-gateway/              # API Gateway reativo (Spring Cloud Gateway)
-├── auth-service/             # Autenticação JWT, Registo, Perfis e Reviews
-├── trip-service/             # Criação de viagens, reservas, OpenFeign e eventos RabbitMQ
-├── vehicle-service/          # Gestão de viaturas, dados de consumo e emissões
-├── payment-service/          # Processamento simulado de pagamentos (MBWay / Cartão)
-├── location-service/         # Cidades de Portugal, cálculo de distâncias e geocoding
-├── notification-service/     # Consumidor de eventos RabbitMQ e histórico de notificações
-├── admin-service/            # Agregação de métricas, CO2/árvores e moderação
-├── frontend-service/         # Interface Web responsiva (Thymeleaf, Bootstrap 5, Leaflet)
-├── db-init/                  # Scripts SQL de inicialização das bases de dados PostgreSQL
-└── .github/workflows/ci.yml  # Pipeline de integração contínua (GitHub Actions)
+├── pom.xml                               # Parent POM agregador com dependências e plugins
+├── common-lib/                           # Biblioteca partilhada (DTOs, eventos AMQP comuns)
+├── eureka-server/                        # Servidor de Descoberta (Netflix Eureka :8761)
+├── api-gateway/                          # API Gateway Reativo (Spring Cloud Gateway :8080)
+├── auth-service/                         # Autenticação JWT, Registo e Avaliações (:8081)
+├── trip-service/                         # Gestão de Viagens, Reservas e OpenFeign (:8082)
+├── vehicle-service/                      # Gestão de Frota Automóvel e Emissões (:8083)
+├── payment-service/                      # Liquidação de Pagamentos MBWay e Cartão (:8084)
+├── location-service/                     # Cidades PT, Geocodificação e Cache Redis (:8085)
+├── notification-service/                 # Consumidor de Eventos RabbitMQ (:8086)
+├── admin-service/                        # Console de Moderação e Métricas CO2 (:8087)
+├── frontend-service/                     # Interface Web SSR (Thymeleaf, Bootstrap, Leaflet :3000)
+├── docker/                               # Ficheiros de provisionamento de métricas
+│   ├── prometheus/prometheus.yml         # Configuração de alvos de scrape do Actuator
+│   └── grafana/                          # Provisionamento automático de datasources e dashboards
+├── docker-compose.yml                    # Orquestração dos 15 contentores do ecossistema
+├── db-init/                              # Scripts SQL de inicialização das bases de dados
+└── docs/                                 # Documentação complementar de screenshots e arquitetura
 ```
 
 ---
 
-## 🛡️ Licença e Autoria
-Projeto desenvolvido por **Rafael Cruz** no âmbito da licenciatura em Engenharia Informática — **Escola Superior de Tecnologia de Castelo Branco (EST-IPCB)**, 2025/2026.
+## 🚀 8. Instalação, Configuração & Execução
+
+### Pré-requisitos
+- **Docker Desktop** (com suporte a Docker Compose v2)
+- **Java 17 JDK** e **Apache Maven 3.9+** (opcional, para compilação e testes locais fora do contentor)
+
+### 8.1 Compilação e Execução de Testes Unitários
+Na raiz do projeto:
+
+```bash
+# Executa todos os testes unitários automatizados em todos os módulos
+mvn clean test
+```
+
+### 8.2 Inicialização do Ecossistema Completo (15 Contentores)
+Para construir as imagens e inicializar toda a infraestrutura em segundo plano:
+
+```bash
+# Compilar pacotes JAR
+mvn package -DskipTests
+
+# Construir imagens e iniciar contentores
+docker compose up -d --build
+```
+
+*(No ambiente Windows, está igualmente disponível o ficheiro de automação `start.bat`).*
+
+### 8.3 Portais & Endpoints de Acesso
+
+| Serviço | URL | Credenciais Padrão |
+| :--- | :--- | :--- |
+| **Aplicação Web Principal** | [http://localhost:3000](http://localhost:3000) | Acesso livre / Login disponível |
+| **Painel de Moderação & KPIs**| [http://localhost:3000/admin](http://localhost:3000/admin) | `admin@carpooling.pt` / `admin123` |
+| **Cockpit Grafana** | [http://localhost:3001](http://localhost:3001) | Acesso direto / `admin` / `admin` |
+| **Prometheus Engine** | [http://localhost:9090](http://localhost:9090) | Acesso direto |
+| **Netflix Eureka Registry** | [http://localhost:8761](http://localhost:8761) | Acesso direto |
+| **RabbitMQ Management** | [http://localhost:15672](http://localhost:15672) | `guest` / `guest` |
+| **API Gateway** | [http://localhost:8080](http://localhost:8080) | Ponto único de roteamento REST |
+
+---
+
+## 🧪 9. Guia de Demonstração & Validação Funcional dos Casos de Uso
+
+Para efeitos de validação do sistema distribuído, a base de dados é inicializada com perfis e veículos pré-configurados:
+
+| Papel | Email | Palavra-passe | Perfil Pré-Configurado |
+| :--- | :--- | :--- | :--- |
+| **Condutor** | `joao.silva@carpooling.pt` | `password123` | Condutor ativo com **Peugeot 208 PureTech** (5.2 L/100km). Avaliação 4.9★. |
+| **Passageira** | `maria.santos@carpooling.pt` | `password123` | Aluna do IPCB, procura viagens regulares. Avaliação 5.0★. |
+| **Condutor 2** | `carlos.mendes@carpooling.pt` | `password123` | Condutor com **Renault Megane dCi** (4.8 L/100km). |
+| **Administrador**| `admin@carpooling.pt` | `admin123` | Acesso à console de métricas `/admin`. |
+
+*(A página de login `/login` dispõe de atalhos rápidos de preenchimento para teste imediato).*
+
+### Roteiro Técnico de Validação dos Fluxos
+
+1. **Validação da Infraestrutura Distribuída:**
+   - Aceder ao **Eureka Server** ([localhost:8761](http://localhost:8761)) e confirmar que todos os microsserviços apresentam status `UP`.
+   - Aceder ao **RabbitMQ Broker** ([localhost:15672](http://localhost:15672)) e verificar a presença da Topic Exchange `carpooling.topic` e das filas `notification.trip.queue` e `notification.reservation.queue`.
+   - Aceder ao **Grafana** ([localhost:3001](http://localhost:3001)) e verificar a coleta contínua de métricas da JVM, threads e tráfego.
+2. **Ciclo de Publicação de Viagem (Condutor):**
+   - Iniciar sessão com `joao.silva@carpooling.pt`.
+   - Consultar **"Os Meus Veículos"** e verificar a viatura associada com consumos médios e emissões de carbono.
+   - Aceder a **"Publicar Viagem"**, selecionar `Castelo Branco` como origem e `Lisboa` como destino.
+   - Observar o cálculo automático instantâneo: distância (225 km), combustível (€19.80), portagens (€12.50) e custo sugerido por passageiro (€10.77), com o trajeto renderizado sobre o mapa Leaflet alimentado pelo cache Redis.
+3. **Ciclo de Pesquisa & Reserva de Boleia (Passageiro):**
+   - Terminar sessão e autenticar como `maria.santos@carpooling.pt`.
+   - Aceder a **"Pesquisar Boleias"**, visualizar as viagens disponíveis com marcadores geográficos e submeter um pedido de reserva de 1 lugar.
+   - O `trip-service` persiste o pedido no estado `PENDING` e publica o evento `reservation.requested` no RabbitMQ.
+4. **Processamento Assíncrono de Eventos & Confirmação:**
+   - Iniciar sessão novamente como `joao.silva@carpooling.pt`.
+   - Aceder a **"Pedidos de Boleia Recebidos"**, constatar o novo pedido da Maria Santos e acionar **"Aceitar Passageiro"**.
+   - O pedido passa ao estado `CONFIRMED` e o `notification-service` consome o evento `reservation.confirmed`, alertando a passageira.
+5. **Governação & Agregação de Sustentabilidade (Administrador):**
+   - Iniciar sessão como `admin@carpooling.pt` e abrir a rota `/admin`.
+   - Verificar os KPIs globais atualizados: total acumulado de **$CO_2$ poupado**, equivalência em **árvores adultas salvas**, total de **despesas partilhadas transacionadas** e listagem de utilizadores com botões de moderação funcional (bloquear/desbloquear com log de auditoria).
+
+---
+
+## 🔬 10. Suíte de Testes Automatizados (JUnit 5 + Mockito)
+
+A integridade das regras de negócio distribuídas é garantida por uma suíte de **24 testes unitários automatizados** distribuídos pelos 6 microsserviços centrais, sem dependências externas através de mocks:
+
+```bash
+mvn test -pl auth-service,trip-service,vehicle-service,payment-service,location-service,admin-service
+```
+
+| Microsserviço | Ficheiro de Teste | Qtd. | Validações & Regras de Negócio Testadas |
+| :--- | :--- | :---: | :--- |
+| **`auth-service`** | `AuthServiceTest.java` | **5** | Autenticação bem-sucedida com JWT; rejeição de password incorreta; bloqueio de contas com suspensão administrativa; rejeição de registo com email duplicado; cálculo de média ponderada de avaliações (1-5★). |
+| **`trip-service`** | `TripServiceTest.java` | **4** | Cálculo correto de divisão de custos por passageiro; ciclo de pedido de reserva com lugares disponíveis; rejeição de reservas por falta de capacidade; cálculo exato da métrica de poupança de CO2. |
+| **`vehicle-service`** | `VehicleServiceTest.java` | **4** | Aplicação de consumos e emissões padrão; suporte a veículos 100% elétricos (consumo zero e emissões zero); filtragem correta de frota por condutor; atualização de dados cadastrais da viatura. |
+| **`payment-service`** | `PaymentServiceTest.java` | **4** | Geração e aprovação de transação simulada MBWay (`MBWAY-XXXX`); geração de transação por cartão (`CARD-XXXX`); pesquisa de transação por identificador único; tratamento de exceção em pagamento inexistente. |
+| **`location-service`** | `LocationServiceTest.java`| **5** | Cálculo geodésico Haversine e conversão rodoviária; cálculo de tempo estimado de condução; resolução de coordenadas de cidades de Portugal; estimativa de portagens; catálogo de cidades ativas. |
+| **`admin-service`** | `AdminServiceTest.java` | **2** | Agregação de métricas de todos os serviços e fórmula de equivalência em árvores salvas ($CO_2 / 22$); moderação com bloqueio de utilizador e persistência de log de auditoria. |
+| **Total Global** | **6 Serviços** | **24** | **100% de Aprovação (`BUILD SUCCESS`, 0 falhas, 0 erros)** |
+
+---
+
+## 👨‍💻 11. Identificação do Projeto & Autoria
+
+- **Instituição:** Instituto Politécnico de Castelo Branco — Escola Superior de Tecnologia (EST-IPCB)
+- **Curso:** Licenciatura em Engenharia Informática
+- **Unidade Curricular:** Aplicações Distribuídas
+- **Ano Letivo:** 2025 / 2026
+- **Autor:** Rafael Cruz (rafael.cruz@ipcbcampus.pt)
+- **Repositório Oficial:** [github.com/RafaCr3z/car-pooling-sharing](https://github.com/RafaCr3z/car-pooling-sharing)
+- **Licença:** MIT License
