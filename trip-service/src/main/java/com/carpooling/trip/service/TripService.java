@@ -73,28 +73,38 @@ public class TripService {
         BigDecimal estimatedFuelCost = request.getEstimatedFuelCost() != null ? request.getEstimatedFuelCost() : BigDecimal.ZERO;
         BigDecimal estimatedTolls = request.getEstimatedTolls() != null ? request.getEstimatedTolls() : BigDecimal.ZERO;
 
-        if (distance == null || distance <= 0) {
+        if (distance == null || distance <= 0 || originLat == null || destLat == null) {
             try {
                 Map<String, Object> route = locationClient.getRouteBetweenCities(
                         request.getDepartureLocation(), 
                         request.getDestinationLocation()
                 );
                 if (route != null && route.containsKey("distanceKm")) {
-                    distance = ((Number) route.get("distanceKm")).doubleValue();
-                    originLat = ((Number) route.get("originLat")).doubleValue();
-                    originLon = ((Number) route.get("originLon")).doubleValue();
-                    destLat = ((Number) route.get("destinationLat")).doubleValue();
-                    destLon = ((Number) route.get("destinationLon")).doubleValue();
-                    if (route.containsKey("estimatedFuelCost")) {
+                    if (distance == null || distance <= 0) {
+                        distance = ((Number) route.get("distanceKm")).doubleValue();
+                    }
+                    if (originLat == null && route.get("originLat") != null) {
+                        originLat = ((Number) route.get("originLat")).doubleValue();
+                    }
+                    if (originLon == null && route.get("originLon") != null) {
+                        originLon = ((Number) route.get("originLon")).doubleValue();
+                    }
+                    if (destLat == null && route.get("destinationLat") != null) {
+                        destLat = ((Number) route.get("destinationLat")).doubleValue();
+                    }
+                    if (destLon == null && route.get("destinationLon") != null) {
+                        destLon = ((Number) route.get("destinationLon")).doubleValue();
+                    }
+                    if ((estimatedFuelCost == null || estimatedFuelCost.compareTo(BigDecimal.ZERO) == 0) && route.containsKey("estimatedFuelCost")) {
                         estimatedFuelCost = new BigDecimal(route.get("estimatedFuelCost").toString());
                     }
-                    if (route.containsKey("estimatedTolls")) {
+                    if ((estimatedTolls == null || estimatedTolls.compareTo(BigDecimal.ZERO) == 0) && route.containsKey("estimatedTolls")) {
                         estimatedTolls = new BigDecimal(route.get("estimatedTolls").toString());
                     }
                 }
             } catch (Exception e) {
                 log.warn("Erro ao obter rota via Feign: {}. A usar distância por defeito.", e.getMessage());
-                distance = 150.0;
+                if (distance == null) distance = 150.0;
             }
         }
 

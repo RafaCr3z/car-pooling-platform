@@ -187,21 +187,63 @@
         attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    if (trips && trips.length > 0) {
-        trips.forEach(t => {
-            const oLat = t.originLatitude || 39.8222;
-            const oLng = t.originLongitude || -7.4909;
-            const dLat = t.destinationLatitude || 38.7223;
-            const dLng = t.destinationLongitude || -9.1393;
+    const CITY_COORDS = {
+        'Castelo Branco': [39.8222, -7.4909],
+        'Lisboa': [38.7223, -9.1393],
+        'Porto': [41.1579, -8.6291],
+        'Coimbra': [40.2033, -8.4103],
+        'Covilhã': [40.2826, -7.5033],
+        'Guarda': [40.5373, -7.2658],
+        'Évora': [38.5714, -7.9070],
+        'Faro': [37.0194, -7.9304],
+        'Braga': [41.5454, -8.4265],
+        'Aveiro': [40.6405, -8.6538],
+        'Viseu': [40.6566, -7.9125],
+        'Leiria': [39.7438, -8.8078],
+        'Santarém': [39.2369, -8.6850],
+        'Setúbal': [38.5244, -8.8882],
+        'Portalegre': [39.2938, -7.4312],
+        'Beja': [38.0151, -7.8631],
+        'Viana do Castelo': [41.6918, -8.8344],
+        'Vila Real': [41.3006, -7.7441],
+        'Bragança': [41.8061, -6.7567]
+    };
 
-            const markerOrigin = L.marker([oLat, oLng]).addTo(map)
+    function resolveCoords(cityName, lat, lng, defaultCoord) {
+        if (lat && lng && typeof lat === 'number' && typeof lng === 'number') {
+            return [lat, lng];
+        }
+        if (cityName) {
+            const trimmed = cityName.trim();
+            for (const [key, val] of Object.entries(CITY_COORDS)) {
+                if (key.toLowerCase() === trimmed.toLowerCase()) {
+                    return val;
+                }
+            }
+        }
+        return defaultCoord;
+    }
+
+    if (trips && trips.length > 0) {
+        const boundsPoints = [];
+        trips.forEach(t => {
+            const originCoord = resolveCoords(t.departureLocation, t.originLatitude, t.originLongitude, [39.8222, -7.4909]);
+            const destCoord = resolveCoords(t.destinationLocation, t.destinationLatitude, t.destinationLongitude, [41.1579, -8.6291]);
+
+            boundsPoints.push(originCoord, destCoord);
+
+            L.marker(originCoord).addTo(map)
                 .bindPopup(`<b>Partida:</b> ${t.departureLocation}<br><b>Condutor:</b> ${t.driverName || 'Condutor'}<br><b>Preço:</b> €${t.costPerPassenger}`);
-            const markerDest = L.marker([dLat, dLng]).addTo(map)
+            L.marker(destCoord).addTo(map)
                 .bindPopup(`<b>Chegada:</b> ${t.destinationLocation}`);
 
-            const routePoints = [ [oLat, oLng], [dLat, dLng] ];
+            const routePoints = [ originCoord, destCoord ];
             L.polyline(routePoints, { color: '#0284c7', weight: 4, dashArray: '6, 6' }).addTo(map);
         });
+
+        if (boundsPoints.length > 0) {
+            map.fitBounds(boundsPoints, { padding: [50, 50] });
+        }
     }
 </script>
 

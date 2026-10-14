@@ -229,10 +229,15 @@
                     document.getElementById('distance').value = data.distanceKm;
                     document.getElementById('displayDist').innerText = `${data.distanceKm} km`;
                     
-                    document.getElementById('originLat').value = data.originLat;
-                    document.getElementById('originLng').value = data.originLng;
-                    document.getElementById('destLat').value = data.destinationLat;
-                    document.getElementById('destLng').value = data.destinationLng;
+                    const oLat = data.originLat || 39.8222;
+                    const oLng = (data.originLon !== undefined && data.originLon !== null) ? data.originLon : (data.originLng || -7.4909);
+                    const dLat = data.destinationLat || 38.7223;
+                    const dLng = (data.destinationLon !== undefined && data.destinationLon !== null) ? data.destinationLon : (data.destinationLng || -9.1393);
+
+                    document.getElementById('originLat').value = oLat;
+                    document.getElementById('originLng').value = oLng;
+                    document.getElementById('destLat').value = dLat;
+                    document.getElementById('destLng').value = dLng;
 
                     document.getElementById('estimatedFuelCost').value = data.estimatedFuelCost;
                     document.getElementById('displayFuel').innerText = `€ ${parseFloat(data.estimatedFuelCost).toFixed(2)}`;
@@ -251,8 +256,8 @@
 
                     // Atualizar Leaflet Map
                     routeLayerGroup.clearLayers();
-                    const originCoords = [data.originLat, data.originLng];
-                    const destCoords = [data.destinationLat, data.destinationLng];
+                    const originCoords = [oLat, oLng];
+                    const destCoords = [dLat, dLng];
 
                     L.marker(originCoords).addTo(routeLayerGroup).bindPopup(`<b>Origem:</b> ${origin}`).openPopup();
                     L.marker(destCoords).addTo(routeLayerGroup).bindPopup(`<b>Destino:</b> ${dest}`);
