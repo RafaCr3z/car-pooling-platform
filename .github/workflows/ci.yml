@@ -22,7 +22,7 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run Automated Unit Tests (31 Tests)
+      - name: Run Automated Unit Tests (51 Tests)
         run: mvn -B test --file pom.xml
 
       - name: Build & Package Microservices with Maven

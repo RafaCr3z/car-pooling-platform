@@ -14,7 +14,7 @@
 [![Tempo](https://img.shields.io/badge/Grafana%20Tempo-Distributed%20Tracing%203200-F46800.svg)](https://grafana.com/oss/tempo/)
 [![Loki](https://img.shields.io/badge/Grafana%20Loki-Centralized%20Logs%203100-F46800.svg)](https://grafana.com/oss/loki/)
 [![Grafana](https://img.shields.io/badge/Grafana-Observability%203001-F46800.svg)](https://grafana.com/)
-[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(31)-25A162.svg)](https://junit.org/junit5/)
+[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(51)-25A162.svg)](https://junit.org/junit5/)
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-yellow.svg)](https://resilience4j.readme.io/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-18%20Containers-2496ED.svg)](https://www.docker.com/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-K8s%20Manifests-326CE5.svg)](https://kubernetes.io/)
@@ -449,7 +449,7 @@ Para efeitos de validação do sistema distribuído, a base de dados é iniciali
 
 ## 🔬 10. Suíte de Testes Automatizados (JUnit 5 + Mockito)
 
-A integridade das regras de negócio distribuídas, dos padrões de resiliência e dos contratos de integração é garantida por uma suíte robusta de **31 testes unitários automatizados** executados via Maven e validados no pipeline de Integração Contínua (CI):
+A integridade das regras de negócio distribuídas, dos padrões de resiliência e dos contratos de integração é garantida por uma suíte robusta de **51 testes unitários automatizados** executados via Maven e validados no pipeline de Integração Contínua (CI):
 
 ```bash
 mvn test
@@ -457,14 +457,17 @@ mvn test
 
 | Microsserviço | Ficheiro de Teste | Qtd. | Validações & Regras de Negócio Testadas |
 | :--- | :--- | :---: | :--- |
+| **`eureka-server`** | `EurekaServerApplicationTest.java` | **1** | Sanity check e validação da classe de arranque do servidor de descoberta Netflix Eureka. |
 | **`api-gateway`** | `RateLimiterConfigTest.java` | **3** | Resolução de chave IP por cabeçalho `X-Forwarded-For`; extração do IP cliente original em cadeias multi-proxy; fallback para `remoteAddress` na ausência de headers. |
 | **`auth-service`** | `AuthServiceTest.java` | **5** | Autenticação bem-sucedida com JWT; rejeição de password incorreta; bloqueio de contas com suspensão administrativa; rejeição de registo com email duplicado; cálculo de média ponderada de avaliações (1-5★). |
-| **`trip-service`** | `TripServiceTest.java`<br>`OutboxPublisherTest.java`<br>`OutboxServiceTest.java` | **8** | Divisão de despesas de combustível e portagens por passageiro; ciclo de reserva com decremento de lugares; rejeição por capacidade; cálculo de CO2 poupado; serialização atómica na Outbox com estado `PENDING`; publicação assíncrona agendada no RabbitMQ com transição para `SENT`; política de retry e transição para `FAILED` após 5 tentativas de falha no broker. |
+| **`trip-service`** | `TripServiceTest.java`<br>`OutboxPublisherTest.java`<br>`OutboxServiceTest.java` | **10** | Divisão de despesas de combustível e portagens por passageiro; ciclo de reserva com decremento de lugares; rejeição por capacidade; cálculo de CO2 poupado; rejeição e cancelamento de reservas com reposição de lugares; serialização atómica na Outbox com estado `PENDING`; publicação assíncrona agendada no RabbitMQ com transição para `SENT`; política de retry e transição para `FAILED` após 5 tentativas de falha no broker. |
 | **`vehicle-service`** | `VehicleServiceTest.java` | **4** | Aplicação de consumos e emissões padrão; suporte a veículos 100% elétricos (consumo zero e emissões zero); filtragem correta de frota por condutor; atualização de dados cadastrais da viatura. |
 | **`payment-service`** | `PaymentServiceTest.java` | **4** | Geração e aprovação de transação simulada MBWay (`MBWAY-XXXX`); geração de transação por cartão (`CARD-XXXX`); pesquisa de transação por identificador único; tratamento de exceção em pagamento inexistente. |
 | **`location-service`** | `LocationServiceTest.java`| **5** | Cálculo geodésico Haversine e conversão rodoviária; cálculo de tempo estimado de condução; resolução de coordenadas de cidades de Portugal; estimativa de portagens; catálogo de cidades ativas. |
+| **`notification-service`** | `RabbitMQConfigTest.java`<br>`NotificationConsumerTest.java`<br>`NotificationServiceTest.java` | **15** | Configuração de Dead Letter Exchange (`carpooling.dlx`) e Dead Letter Queue (`notification.dlq`); consumo e roteamento de eventos `TripEvent` (STARTED, COMPLETED) e `ReservationEvent` (REQUESTED, CONFIRMED, REJECTED); consulta, contagem e marcação de lidas em lote. |
 | **`admin-service`** | `AdminServiceTest.java` | **2** | Agregação de métricas de todos os serviços e fórmula de equivalência em árvores salvas ($CO_2 / 22$); moderação com bloqueio de utilizador e persistência de log de auditoria. |
-| **Total Global** | **7 Serviços** | **31** | **100% de Aprovação (`BUILD SUCCESS`, 0 falhas, 0 erros)** |
+| **`frontend-service`** | `NotificationServiceTest.java` | **2** | Tratamento resiliente a valores nulos na interface com o backend e prevenção de NPEs na renderização. |
+| **Total Global** | **10 Módulos** | **51** | **100% de Aprovação (`BUILD SUCCESS`, 0 falhas, 0 erros)** |
 
 ---
 

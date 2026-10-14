@@ -177,4 +177,51 @@ class TripServiceTest {
         verify(tripRepository, times(1)).save(sampleTrip);
         verify(reservationRepository, times(1)).save(reservation);
     }
+
+    @Test
+    @DisplayName("Deve rejeitar reserva e atualizar estado para REJECTED")
+    void testRejectReservation() {
+        Reservation reservation = Reservation.builder()
+                .id(101L)
+                .trip(sampleTrip)
+                .passengerId(20L)
+                .status(ReservationStatus.PENDING)
+                .build();
+
+        when(reservationRepository.findById(101L)).thenReturn(Optional.of(reservation));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArgument(0));
+
+        ReservationDTO result = tripService.rejectReservation(101L, "Sem disponibilidade");
+
+        assertNotNull(result);
+        assertEquals("REJECTED", result.getStatus());
+        verify(reservationRepository).save(reservation);
+        verify(outboxService).saveEvent(eq("RESERVATION"), eq(101L), eq("REJECTED"), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("Deve cancelar reserva confirmada e libertar os lugares na viagem")
+    void testCancelReservationFreesSeats() {
+        sampleTrip.setOccupiedSeats(2);
+        Reservation reservation = Reservation.builder()
+                .id(102L)
+                .trip(sampleTrip)
+                .passengerId(20L)
+                .numberOfSeats(2)
+                .status(ReservationStatus.CONFIRMED)
+                .build();
+
+        when(reservationRepository.findById(102L)).thenReturn(Optional.of(reservation));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArgument(0));
+        when(tripRepository.save(any(Trip.class))).thenAnswer(i -> i.getArgument(0));
+
+        ReservationDTO result = tripService.cancelReservation(102L);
+
+        assertNotNull(result);
+        assertEquals("CANCELLED", result.getStatus());
+        assertEquals(0, sampleTrip.getOccupiedSeats());
+        verify(tripRepository).save(sampleTrip);
+        verify(reservationRepository).save(reservation);
+    }
 }
+
