@@ -28,5 +28,17 @@ jobs:
       - name: Build & Package Microservices with Maven
         run: mvn -B clean package -DskipTests --file pom.xml
 
-      - name: Verify Docker Compose Config
+      - name: Verify Docker Compose Config (18 Containers)
         run: docker compose config
+
+      - name: Validate Kubernetes Manifests (Kustomize Build)
+        run: kubectl kustomize k8s/
+
+      - name: Run Trivy Vulnerability Scanner (DevSecOps)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'

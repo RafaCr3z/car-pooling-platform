@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: carpooling
+
+resources:
+  - 00-namespace.yaml
+  - 01-configmap.yaml
+  - 02-secrets.yaml
+  - 03-infrastructure.yaml
+  - 04-microservices.yaml
+  - 05-gateway-frontend.yaml
+  - 06-ingress.yaml

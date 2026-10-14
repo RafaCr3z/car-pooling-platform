@@ -17,6 +17,8 @@
 [![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(31)-25A162.svg)](https://junit.org/junit5/)
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-yellow.svg)](https://resilience4j.readme.io/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-18%20Containers-2496ED.svg)](https://www.docker.com/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-K8s%20Manifests-326CE5.svg)](https://kubernetes.io/)
+[![Trivy](https://img.shields.io/badge/Trivy-DevSecOps%20Scan-1E88E5.svg)](https://trivy.dev/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900.svg)](https://leafletjs.com/)
 [![CI Pipeline](https://github.com/RafaCr3z/car-pooling-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/RafaCr3z/car-pooling-platform/actions)
 
@@ -380,6 +382,30 @@ docker compose up -d --build
 | **Netflix Eureka Registry** | [http://localhost:8761](http://localhost:8761) | Acesso direto |
 | **RabbitMQ Management** | [http://localhost:15672](http://localhost:15672) | `guest` / `guest` |
 | **API Gateway** | [http://localhost:8080](http://localhost:8080) | Ponto único de roteamento REST |
+
+### 8.4 Orquestração Cloud-Native com Kubernetes (K8s) & DevSecOps
+
+Para além do ambiente de desenvolvimento em Docker Compose, a plataforma inclui manifestos declarativos prontos para implantação em clusters de produção (AKS, EKS, GKE ou Minikube/Kind), eliminando a dependência do Eureka e recorrendo ao **Service Discovery nativo do Kubernetes (CoreDNS + Kube-Proxy)**:
+
+```bash
+# Validação e visualização de todos os manifestos compilados (Kustomize)
+kubectl kustomize k8s/
+
+# Implantação completa da infraestrutura, bases de dados e microsserviços
+kubectl apply -k k8s/
+```
+
+#### Estrutura de Manifestos Kubernetes (`/k8s`):
+- **`00-namespace.yaml`:** Criação do namespace isolado `carpooling`.
+- **`01-configmap.yaml` & `02-secrets.yaml`:** Parametrização desacoplada de variáveis de ambiente e credenciais criptografadas.
+- **`03-infrastructure.yaml`:** Deployments e Services internos para PostgreSQL (`:5432`), RabbitMQ (`:5672`), Redis (`:6379`) e Grafana Tempo (`:3200`, `:4318`).
+- **`04-microservices.yaml`:** Deployments com réplicas dinâmicas, *Liveness/Readiness Probes* apontadas ao `/actuator/health` e limites estritos de CPU/Memória para cada um dos 7 microsserviços de negócio.
+- **`05-gateway-frontend.yaml`:** Orquestração escalável com balanceamento de carga do `api-gateway` e da interface `frontend-service`.
+- **`06-ingress.yaml`:** Encaminhamento HTTP inteligente via NGINX Ingress Controller.
+
+#### DevSecOps & Hardening de Contentores:
+- **Execução Non-Root:** Todas as imagens Docker correm com utilizador sem privilégios (`appuser` com grupo `appgroup`), mitigando riscos de *container breakout*.
+- **Auditoria Contínua com Trivy:** O pipeline de CI do GitHub Actions integra scan automatizado de vulnerabilidades de segurança (CVEs) em todas as dependências Maven e no sistema de ficheiros.
 
 ---
 

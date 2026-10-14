@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: carpooling-config
+  namespace: carpooling
+data:
+  SPRING_PROFILES_ACTIVE: "k8s"
+  SPRING_RABBITMQ_HOST: "rabbitmq"
+  SPRING_RABBITMQ_PORT: "5672"
+  SPRING_DATA_REDIS_HOST: "redis"
+  SPRING_DATA_REDIS_PORT: "6379"
+  MANAGEMENT_OTLP_TRACING_ENDPOINT: "http://tempo:4318/v1/traces"
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: "carpooling"

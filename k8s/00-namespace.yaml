@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: carpooling
+  labels:
+    app.kubernetes.io/name: carpooling
+    app.kubernetes.io/part-of: car-pooling-platform
