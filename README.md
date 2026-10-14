@@ -1,8 +1,10 @@
 # 🚗 CarPooling PT — Plataforma Distribuída de Partilha Inteligente de Viagens
 
-[![Java 17](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
+[![Java 21 LTS](https://img.shields.io/badge/Java-21%20LTS-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot 3.2](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.0.0-blue.svg)](https://spring.io/projects/spring-cloud)
+[![OpenAPI 3](https://img.shields.io/badge/OpenAPI%203-Swagger%20Gateway-green.svg)](http://localhost:8080/swagger-ui.html)
+[![Flyway](https://img.shields.io/badge/Flyway-DB%20Migrations-CC0202.svg)](https://flywaydb.org/)
 [![Redis](https://img.shields.io/badge/Redis-7%20Cache--Aside-DC382D.svg)](https://redis.io/)
 [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Event--Driven-orange.svg)](https://www.rabbitmq.com/)
 [![Prometheus](https://img.shields.io/badge/Prometheus-Metrics%20Engine-E6522C.svg)](https://prometheus.io/)
@@ -309,7 +311,7 @@ car-pooling-platform/
 
 ### Pré-requisitos
 - **Docker Desktop** (com suporte a Docker Compose v2)
-- **Java 17 JDK** e **Apache Maven 3.9+** (opcional, para compilação e testes locais fora do contentor)
+- **Java 21 JDK** e **Apache Maven 3.9+** (opcional, para compilação e testes locais fora do contentor)
 
 ### 8.1 Compilação e Execução de Testes Unitários
 Na raiz do projeto:
@@ -336,6 +338,7 @@ docker compose up -d --build
 
 | Serviço | URL | Credenciais Padrão |
 | :--- | :--- | :--- |
+| **Documentação Centralizada OpenAPI 3 / Swagger UI** | [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) | Acesso livre (agrega Auth, Trip, Vehicle, Payment, Location, Admin) |
 | **Aplicação Web Principal** | [http://localhost:3000](http://localhost:3000) | Acesso livre / Login disponível |
 | **Painel de Moderação & KPIs**| [http://localhost:3000/admin](http://localhost:3000/admin) | `admin@carpooling.pt` / `admin123` |
 | **Cockpit Grafana** | [http://localhost:3001](http://localhost:3001) | Acesso direto / `admin` / `admin` |

@@ -1,6 +1,9 @@
 spring:
   application:
     name: location-service
+  threads:
+    virtual:
+      enabled: true
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:redis}
@@ -9,6 +12,13 @@ spring:
     type: redis
     redis:
       time-to-live: 3600000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
   
   cloud:
     config:

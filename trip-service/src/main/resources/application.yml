@@ -1,6 +1,13 @@
 spring:
   application:
     name: trip-service
+  threads:
+    virtual:
+      enabled: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/carpooling_trips}
     username: ${SPRING_DATASOURCE_USERNAME:carpooling}

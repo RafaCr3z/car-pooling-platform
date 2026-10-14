@@ -41,6 +41,68 @@ spring:
           predicates:
             - Path=/api/admin/**
 
+        # OpenAPI / Swagger aggregation routes
+        - id: auth-service-docs
+          uri: lb://auth-service
+          predicates:
+            - Path=/v3/api-docs/auth
+          filters:
+            - RewritePath=/v3/api-docs/auth, /v3/api-docs
+
+        - id: trip-service-docs
+          uri: lb://trip-service
+          predicates:
+            - Path=/v3/api-docs/trips
+          filters:
+            - RewritePath=/v3/api-docs/trips, /v3/api-docs
+
+        - id: vehicle-service-docs
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/v3/api-docs/vehicles
+          filters:
+            - RewritePath=/v3/api-docs/vehicles, /v3/api-docs
+
+        - id: payment-service-docs
+          uri: lb://payment-service
+          predicates:
+            - Path=/v3/api-docs/payments
+          filters:
+            - RewritePath=/v3/api-docs/payments, /v3/api-docs
+
+        - id: location-service-docs
+          uri: lb://location-service
+          predicates:
+            - Path=/v3/api-docs/locations
+          filters:
+            - RewritePath=/v3/api-docs/locations, /v3/api-docs
+
+        - id: admin-service-docs
+          uri: lb://admin-service
+          predicates:
+            - Path=/v3/api-docs/admin
+          filters:
+            - RewritePath=/v3/api-docs/admin, /v3/api-docs
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: 1. Auth Service
+        url: /v3/api-docs/auth
+      - name: 2. Trip Service
+        url: /v3/api-docs/trips
+      - name: 3. Vehicle Service
+        url: /v3/api-docs/vehicles
+      - name: 4. Payment Service
+        url: /v3/api-docs/payments
+      - name: 5. Location Service
+        url: /v3/api-docs/locations
+      - name: 6. Admin Service
+        url: /v3/api-docs/admin
+
 server:
   port: 8080
 

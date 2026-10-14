@@ -1,6 +1,13 @@
 spring:
   application:
     name: admin-service
+  threads:
+    virtual:
+      enabled: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/carpooling_admin}
     username: ${SPRING_DATASOURCE_USERNAME:carpooling}
@@ -43,6 +50,13 @@ resilience4j:
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
         failureRateThreshold: 50
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
 
 management:
   endpoints:

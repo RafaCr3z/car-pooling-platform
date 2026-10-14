@@ -46,6 +46,11 @@
             <groupId>com.carpooling</groupId>
             <artifactId>common-lib</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
