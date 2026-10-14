@@ -53,6 +53,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     networks:
       - carpooling-network
     depends_on:
@@ -72,6 +73,7 @@ services:
       SPRING_DATASOURCE_USERNAME: carpooling
       SPRING_DATASOURCE_PASSWORD: carpooling123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     networks:
       - carpooling-network
     depends_on:
@@ -96,6 +98,7 @@ services:
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     networks:
       - carpooling-network
     depends_on:
@@ -117,6 +120,7 @@ services:
       SPRING_DATASOURCE_USERNAME: carpooling
       SPRING_DATASOURCE_PASSWORD: carpooling123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     networks:
       - carpooling-network
     depends_on:
@@ -137,6 +141,7 @@ services:
       SPRING_DATASOURCE_USERNAME: carpooling
       SPRING_DATASOURCE_PASSWORD: carpooling123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     networks:
       - carpooling-network
     depends_on:
@@ -154,6 +159,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     networks:
       - carpooling-network
     depends_on:
@@ -177,6 +183,7 @@ services:
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     networks:
       - carpooling-network
     depends_on:
@@ -198,6 +205,7 @@ services:
       SPRING_DATASOURCE_USERNAME: carpooling
       SPRING_DATASOURCE_PASSWORD: carpooling123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     networks:
       - carpooling-network
     depends_on:
@@ -215,6 +223,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
       SPRING_APPLICATION_NAME: frontend-service
       API_GATEWAY_URL: http://api-gateway:8080
     networks:
