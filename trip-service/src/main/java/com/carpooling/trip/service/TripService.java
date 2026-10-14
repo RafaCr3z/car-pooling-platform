@@ -41,6 +41,7 @@ public class TripService {
     private final VehicleClient vehicleClient;
     private final LocationClient locationClient;
     private final AmqpTemplate rabbitTemplate;
+    private final OutboxService outboxService;
 
     @Transactional
     public TripDTO createTrip(CreateTripRequest request) {
@@ -391,10 +392,14 @@ public class TripService {
                     .timestamp(LocalDateTime.now())
                     .build();
 
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "trip." + type.name().toLowerCase(), event);
-            log.info("Evento TripEvent [{}] publicado com sucesso para RabbitMQ", type);
+            if (outboxService != null) {
+                outboxService.saveEvent("TRIP", trip.getId(), type.name(), "trip." + type.name().toLowerCase(), event);
+            } else if (rabbitTemplate != null) {
+                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "trip." + type.name().toLowerCase(), event);
+            }
+            log.info("Evento TripEvent [{}] registado na Outbox com sucesso", type);
         } catch (Exception e) {
-            log.warn("Erro ao publicar evento TripEvent no RabbitMQ (mensageria opcional): {}", e.getMessage());
+            log.warn("Erro ao registar evento TripEvent na Outbox: {}", e.getMessage());
         }
     }
 
@@ -417,10 +422,14 @@ public class TripService {
                     .timestamp(LocalDateTime.now())
                     .build();
 
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "reservation." + type.name().toLowerCase(), event);
-            log.info("Evento ReservationEvent [{}] publicado com sucesso para RabbitMQ", type);
+            if (outboxService != null) {
+                outboxService.saveEvent("RESERVATION", res.getId(), type.name(), "reservation." + type.name().toLowerCase(), event);
+            } else if (rabbitTemplate != null) {
+                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "reservation." + type.name().toLowerCase(), event);
+            }
+            log.info("Evento ReservationEvent [{}] registado na Outbox com sucesso", type);
         } catch (Exception e) {
-            log.warn("Erro ao publicar evento ReservationEvent no RabbitMQ: {}", e.getMessage());
+            log.warn("Erro ao registar evento ReservationEvent na Outbox: {}", e.getMessage());
         }
     }
 

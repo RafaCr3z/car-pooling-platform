@@ -1,0 +1,56 @@
+package com.carpooling.gateway;
+
+import com.carpooling.gateway.config.RateLimiterConfig;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.server.MockServerWebExchange;
+import reactor.test.StepVerifier;
+
+import java.net.InetSocketAddress;
+
+class RateLimiterConfigTest {
+
+    private final RateLimiterConfig config = new RateLimiterConfig();
+    private final KeyResolver resolver = config.ipKeyResolver();
+
+    @Test
+    @DisplayName("Deve extrair endereço IP do cabeçalho X-Forwarded-For")
+    void testResolveIpFromXForwardedFor() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/trips")
+                .header("X-Forwarded-For", "203.0.113.195")
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        StepVerifier.create(resolver.resolve(exchange))
+                .expectNext("203.0.113.195")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Deve extrair o primeiro IP quando existirem múltiplos proxies no X-Forwarded-For")
+    void testResolveFirstIpFromMultipleProxies() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/trips")
+                .header("X-Forwarded-For", "198.51.100.10, 10.0.0.1, 172.16.0.2")
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        StepVerifier.create(resolver.resolve(exchange))
+                .expectNext("198.51.100.10")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Deve usar o remoteAddress quando o cabeçalho X-Forwarded-For não estiver presente")
+    void testResolveIpFromRemoteAddress() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/trips")
+                .remoteAddress(new InetSocketAddress("192.168.1.50", 12345))
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        StepVerifier.create(resolver.resolve(exchange))
+                .expectNext("192.168.1.50")
+                .verifyComplete();
+    }
+}

@@ -12,6 +12,7 @@ import com.carpooling.trip.entity.Trip;
 import com.carpooling.trip.entity.TripStatus;
 import com.carpooling.trip.repository.ReservationRepository;
 import com.carpooling.trip.repository.TripRepository;
+import com.carpooling.trip.service.OutboxService;
 import com.carpooling.trip.service.TripService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,6 +49,9 @@ class TripServiceTest {
 
     @Mock
     private AmqpTemplate rabbitTemplate;
+
+    @Mock
+    private OutboxService outboxService;
 
     @InjectMocks
     private TripService tripService;

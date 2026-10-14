@@ -5,11 +5,13 @@
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.0.0-blue.svg)](https://spring.io/projects/spring-cloud)
 [![OpenAPI 3](https://img.shields.io/badge/OpenAPI%203-Swagger%20Gateway-green.svg)](http://localhost:8080/swagger-ui.html)
 [![Flyway](https://img.shields.io/badge/Flyway-DB%20Migrations-CC0202.svg)](https://flywaydb.org/)
+[![Pattern](https://img.shields.io/badge/Pattern-Transactional%20Outbox-blue.svg)](https://microservices.io/patterns/data/transactional-outbox.html)
+[![Rate Limiting](https://img.shields.io/badge/Rate%20Limiting-Redis%20Token%20Bucket-red.svg)](https://redis.io/)
+[![Resilience](https://img.shields.io/badge/RabbitMQ-DLQ%20%2B%20Exponential%20Backoff-orange.svg)](https://www.rabbitmq.com/)
 [![Redis](https://img.shields.io/badge/Redis-7%20Cache--Aside-DC382D.svg)](https://redis.io/)
-[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Event--Driven-orange.svg)](https://www.rabbitmq.com/)
 [![Prometheus](https://img.shields.io/badge/Prometheus-Metrics%20Engine-E6522C.svg)](https://prometheus.io/)
 [![Grafana](https://img.shields.io/badge/Grafana-Observability%203001-F46800.svg)](https://grafana.com/)
-[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(24)-25A162.svg)](https://junit.org/junit5/)
+[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(31)-25A162.svg)](https://junit.org/junit5/)
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-yellow.svg)](https://resilience4j.readme.io/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-15%20Containers-2496ED.svg)](https://www.docker.com/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900.svg)](https://leafletjs.com/)
@@ -231,6 +233,28 @@ Todos os microsserviços da infraestrutura incluem o **Spring Boot Actuator** co
   - **Erros:** Distribuição percentual de códigos HTTP (2xx, 4xx, 5xx).
   - **Saturação:** Memória Heap da JVM em tempo real, coletas de Garbage Collection e contagem de threads ativas no Tomcat.
 
+### 4.7 Resiliência de Mensageria: Dead Letter Queue (DLQ) & Backoff Exponencial
+Para assegurar que falhas de processamento em consumidores não bloqueiam a fila principal nem descartam silenciosamente eventos vitais do negócio:
+- **Dead Letter Exchange (DLX):** `carpooling.dlx` (Topic Exchange).
+- **Dead Letter Queue (DLQ):** `notification.dlq` associada com chave de encaminhamento `#`.
+- **Configuração de Retry Exponencial:** No `notification-service`, o listener Spring AMQP opera com *retry* automático de 3 tentativas, intervalo inicial de 1000ms e multiplicador $2.0\times$ (1s $\rightarrow$ 2s $\rightarrow$ 4s).
+- **Encaminhamento de Poison Pills:** Se o processamento continuar a falhar após as 3 tentativas, o Spring AMQP efetua a rejeição sem re-enfileiramento (`default-requeue-rejected: false`), encaminhando a mensagem para a `notification.dlq` para análise forense por parte da equipa de SRE sem impacto no throughput da plataforma.
+
+### 4.8 Proteção de Tráfego: Distributed Rate Limiting com Redis (*Token Bucket Pattern*)
+O `api-gateway` protege a infraestrutura contra abusos, ataques de negação de serviço (DoS) e picos de tráfego descontrolados recorrendo ao algoritmo **Token Bucket** gerido de forma reativa e atómica pelo **Redis**:
+- **Algoritmo:** Token Bucket implementado nativamente via `RequestRateLimiter` do Spring Cloud Gateway.
+- **Resolução de Clientes:** `KeyResolver` inteligente baseado no IP real do cliente (suportando cabeçalhos `X-Forwarded-For` de proxies reversos e load balancers).
+- **Parâmetros Operacionais:** Taxa de reposição (`replenishRate`) de 20 requisições/segundo com capacidade de rajada (`burstCapacity`) de 40 tokens.
+- **Resposta a Excesso de Carga:** Requisições que excedam o saldo de tokens são imediatamente rejeitadas com código HTTP `429 Too Many Requests`, preservando a saúde dos nós de computação a jusante.
+
+### 4.9 Consistência Eventual & Garantia de Entrega: *Transactional Outbox Pattern*
+Em sistemas distribuídos, a escrita numa base de dados relacional e a publicação num broker de mensageria sofrem do problema clássico de *dual-write* (se a BD gravar mas a rede cair antes de alcançar o RabbitMQ, o evento perde-se; se o RabbitMQ aceitar mas a transação fizer *rollback*, emite-se um evento fantasma).
+Para resolver isto com consistência estrita:
+- **Tabela `outbox_events`:** Criada no PostgreSQL do `trip-service` via migração Flyway `V2__create_outbox_table.sql`.
+- **Gravação Atómica:** Ao criar ou atualizar viagens e reservas, o `TripService` persiste o estado do negócio e o registo do evento na tabela `outbox_events` (com estado `PENDING`) no âmbito da mesma transação local `@Transactional`.
+- **Publicador Assíncrono (`OutboxPublisher`):** Um worker agendado (`@Scheduled`) lê os eventos pendentes em lotes, publica-os no RabbitMQ através do `AmqpTemplate` e atualiza o estado para `SENT` com carimbo temporal.
+- **Garantia de Entrega:** Entrega garantida do tipo *At-Least-Once*, com política de re-tentativas (até 5 tentativas com registo de `error_message` antes de transitar para `FAILED`) caso o broker RabbitMQ sofra uma paragem temporária.
+
 ---
 
 ## 📐 5. Modelos Matemáticos & Fórmulas de Negócio
@@ -389,21 +413,22 @@ Para efeitos de validação do sistema distribuído, a base de dados é iniciali
 
 ## 🔬 10. Suíte de Testes Automatizados (JUnit 5 + Mockito)
 
-A integridade das regras de negócio distribuídas é garantida por uma suíte de **24 testes unitários automatizados** distribuídos pelos 6 microsserviços centrais, sem dependências externas através de mocks:
+A integridade das regras de negócio distribuídas, dos padrões de resiliência e dos contratos de integração é garantida por uma suíte robusta de **31 testes unitários automatizados** executados via Maven e validados no pipeline de Integração Contínua (CI):
 
 ```bash
-mvn test -pl auth-service,trip-service,vehicle-service,payment-service,location-service,admin-service
+mvn test
 ```
 
 | Microsserviço | Ficheiro de Teste | Qtd. | Validações & Regras de Negócio Testadas |
 | :--- | :--- | :---: | :--- |
+| **`api-gateway`** | `RateLimiterConfigTest.java` | **3** | Resolução de chave IP por cabeçalho `X-Forwarded-For`; extração do IP cliente original em cadeias multi-proxy; fallback para `remoteAddress` na ausência de headers. |
 | **`auth-service`** | `AuthServiceTest.java` | **5** | Autenticação bem-sucedida com JWT; rejeição de password incorreta; bloqueio de contas com suspensão administrativa; rejeição de registo com email duplicado; cálculo de média ponderada de avaliações (1-5★). |
-| **`trip-service`** | `TripServiceTest.java` | **4** | Cálculo correto de divisão de custos por passageiro; ciclo de pedido de reserva com lugares disponíveis; rejeição de reservas por falta de capacidade; cálculo exato da métrica de poupança de CO2. |
+| **`trip-service`** | `TripServiceTest.java`<br>`OutboxPublisherTest.java`<br>`OutboxServiceTest.java` | **8** | Divisão de despesas de combustível e portagens por passageiro; ciclo de reserva com decremento de lugares; rejeição por capacidade; cálculo de CO2 poupado; serialização atómica na Outbox com estado `PENDING`; publicação assíncrona agendada no RabbitMQ com transição para `SENT`; política de retry e transição para `FAILED` após 5 tentativas de falha no broker. |
 | **`vehicle-service`** | `VehicleServiceTest.java` | **4** | Aplicação de consumos e emissões padrão; suporte a veículos 100% elétricos (consumo zero e emissões zero); filtragem correta de frota por condutor; atualização de dados cadastrais da viatura. |
 | **`payment-service`** | `PaymentServiceTest.java` | **4** | Geração e aprovação de transação simulada MBWay (`MBWAY-XXXX`); geração de transação por cartão (`CARD-XXXX`); pesquisa de transação por identificador único; tratamento de exceção em pagamento inexistente. |
 | **`location-service`** | `LocationServiceTest.java`| **5** | Cálculo geodésico Haversine e conversão rodoviária; cálculo de tempo estimado de condução; resolução de coordenadas de cidades de Portugal; estimativa de portagens; catálogo de cidades ativas. |
 | **`admin-service`** | `AdminServiceTest.java` | **2** | Agregação de métricas de todos os serviços e fórmula de equivalência em árvores salvas ($CO_2 / 22$); moderação com bloqueio de utilizador e persistência de log de auditoria. |
-| **Total Global** | **6 Serviços** | **24** | **100% de Aprovação (`BUILD SUCCESS`, 0 falhas, 0 erros)** |
+| **Total Global** | **7 Serviços** | **31** | **100% de Aprovação (`BUILD SUCCESS`, 0 falhas, 0 erros)** |
 
 ---
 
