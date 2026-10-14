@@ -281,7 +281,7 @@ A plataforma dispõe de interfaces completas validadas com dados realistas. A do
 ## 📂 7. Estrutura dos Módulos do Repositório
 
 ```
-car-pooling-sharing/
+car-pooling-platform/
 ├── pom.xml                               # Parent POM agregador com dependências e plugins
 ├── common-lib/                           # Biblioteca partilhada (DTOs, eventos AMQP comuns)
 ├── eureka-server/                        # Servidor de Descoberta (Netflix Eureka :8761)
@@ -410,5 +410,5 @@ mvn test -pl auth-service,trip-service,vehicle-service,payment-service,location-
 - **Unidade Curricular:** Aplicações Distribuídas
 - **Ano Letivo:** 2025 / 2026
 - **Autor:** Rafael Cruz (rafael.cruz@ipcbcampus.pt)
-- **Repositório Oficial:** [github.com/RafaCr3z/car-pooling-sharing](https://github.com/RafaCr3z/car-pooling-sharing)
+- **Repositório Oficial:** [github.com/RafaCr3z/car-pooling-platform](https://github.com/RafaCr3z/car-pooling-platform)
 - **Licença:** MIT License
