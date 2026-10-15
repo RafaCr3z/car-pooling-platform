@@ -1,10 +1,13 @@
 package com.carpooling.notification.controller;
 
+import com.carpooling.common.security.CurrentUser;
 import com.carpooling.notification.entity.Notification;
 import com.carpooling.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,28 +22,54 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Notification>> getUserNotifications(@PathVariable Long userId) {
+    public ResponseEntity<List<Notification>> getUserNotifications(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal Jwt jwt) {
+        if (jwt != null) {
+            CurrentUser.from(jwt).requireSelfOrAdmin(userId);
+        }
         return ResponseEntity.ok(notificationService.getUserNotifications(userId));
     }
 
     @GetMapping("/user/{userId}/unread")
-    public ResponseEntity<List<Notification>> getUnreadNotifications(@PathVariable Long userId) {
+    public ResponseEntity<List<Notification>> getUnreadNotifications(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal Jwt jwt) {
+        if (jwt != null) {
+            CurrentUser.from(jwt).requireSelfOrAdmin(userId);
+        }
         return ResponseEntity.ok(notificationService.getUnreadNotifications(userId));
     }
 
     @GetMapping("/user/{userId}/unread-count")
-    public ResponseEntity<Map<String, Long>> getUnreadCount(@PathVariable Long userId) {
+    public ResponseEntity<Map<String, Long>> getUnreadCount(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal Jwt jwt) {
+        if (jwt != null) {
+            CurrentUser.from(jwt).requireSelfOrAdmin(userId);
+        }
         long count = notificationService.getUnreadCount(userId);
         return ResponseEntity.ok(Map.of("unreadCount", count));
     }
 
     @PutMapping("/{id}/read")
-    public ResponseEntity<Notification> markAsRead(@PathVariable Long id) {
-        return ResponseEntity.ok(notificationService.markAsRead(id));
+    public ResponseEntity<Notification> markAsRead(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt) {
+        Notification notification = notificationService.markAsRead(id);
+        if (jwt != null && notification != null) {
+            CurrentUser.from(jwt).requireSelfOrAdmin(notification.getUserId());
+        }
+        return ResponseEntity.ok(notification);
     }
 
     @PutMapping("/user/{userId}/read-all")
-    public ResponseEntity<Map<String, String>> markAllAsRead(@PathVariable Long userId) {
+    public ResponseEntity<Map<String, String>> markAllAsRead(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal Jwt jwt) {
+        if (jwt != null) {
+            CurrentUser.from(jwt).requireSelfOrAdmin(userId);
+        }
         notificationService.markAllAsRead(userId);
         return ResponseEntity.ok(Map.of("message", "All notifications marked as read"));
     }

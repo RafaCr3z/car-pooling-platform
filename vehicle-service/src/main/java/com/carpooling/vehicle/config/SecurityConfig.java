@@ -30,7 +30,6 @@ public class SecurityConfig {
         return ServiceSecurity.build(http, jwtDecoder(), auth -> auth
                 .requestMatchers(HttpMethod.GET, "/api/vehicles", "/api/vehicles/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/vehicles/calculate-cost").permitAll()
-                .anyRequest().authenticated()
         );
     }
 }

@@ -16,7 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
@@ -30,14 +31,14 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Testes Unitários - OutboxPublisher (Transactional Outbox Pattern)")
+@DisplayName("Testes Unitários - OutboxPublisher (Transactional Outbox Pattern & Correlated Confirms)")
 class OutboxPublisherTest {
 
     @Mock
     private OutboxRepository outboxRepository;
 
     @Mock
-    private AmqpTemplate rabbitTemplate;
+    private RabbitTemplate rabbitTemplate;
 
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper()
@@ -65,26 +66,56 @@ class OutboxPublisherTest {
     }
 
     @Test
-    @DisplayName("Deve publicar evento pendente da Outbox no RabbitMQ e marcar como SENT")
+    @DisplayName("Deve publicar evento pendente da Outbox no RabbitMQ, aguardar ACK e marcar como SENT")
     void testProcessOutboxEventsSuccess() {
         when(outboxRepository.findTopPendingEvents(eq("PENDING"), any(Pageable.class)))
                 .thenReturn(List.of(sampleEvent));
+
+        doAnswer(invocation -> {
+            CorrelationData cd = invocation.getArgument(3);
+            if (cd != null) {
+                cd.getFuture().complete(new CorrelationData.Confirm(true, null));
+            }
+            return null;
+        }).when(rabbitTemplate).convertAndSend(eq(RabbitMQConfig.EXCHANGE_NAME), eq("trip.started"), any(TripEvent.class), any(CorrelationData.class));
 
         outboxPublisher.processOutboxEvents();
 
         assertEquals("SENT", sampleEvent.getStatus());
         assertNotNull(sampleEvent.getProcessedAt());
-        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQConfig.EXCHANGE_NAME), eq("trip.started"), any(TripEvent.class));
+        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQConfig.EXCHANGE_NAME), eq("trip.started"), any(TripEvent.class), any(CorrelationData.class));
         verify(outboxRepository, times(1)).save(sampleEvent);
     }
 
     @Test
-    @DisplayName("Deve incrementar retry_count e manter PENDING quando o broker RabbitMQ falha")
+    @DisplayName("Deve incrementar retry_count e manter PENDING quando o broker RabbitMQ devolve NACK")
+    void testProcessOutboxEventsNackRetry() {
+        when(outboxRepository.findTopPendingEvents(eq("PENDING"), any(Pageable.class)))
+                .thenReturn(List.of(sampleEvent));
+
+        doAnswer(invocation -> {
+            CorrelationData cd = invocation.getArgument(3);
+            if (cd != null) {
+                cd.getFuture().complete(new CorrelationData.Confirm(false, "Queue quota exceeded"));
+            }
+            return null;
+        }).when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
+
+        outboxPublisher.processOutboxEvents();
+
+        assertEquals("PENDING", sampleEvent.getStatus());
+        assertEquals(1, sampleEvent.getRetryCount());
+        assertEquals("RabbitMQ NACK recebido para evento Outbox #1: Queue quota exceeded", sampleEvent.getErrorMessage());
+        verify(outboxRepository, times(1)).save(sampleEvent);
+    }
+
+    @Test
+    @DisplayName("Deve incrementar retry_count e manter PENDING quando o broker RabbitMQ falha com exceção de rede")
     void testProcessOutboxEventsRetryOnFailure() {
         when(outboxRepository.findTopPendingEvents(eq("PENDING"), any(Pageable.class)))
                 .thenReturn(List.of(sampleEvent));
         doThrow(new RuntimeException("RabbitMQ connection refused"))
-                .when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class));
+                .when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
 
         outboxPublisher.processOutboxEvents();
 
@@ -101,7 +132,7 @@ class OutboxPublisherTest {
         when(outboxRepository.findTopPendingEvents(eq("PENDING"), any(Pageable.class)))
                 .thenReturn(List.of(sampleEvent));
         doThrow(new RuntimeException("Broker unreachable"))
-                .when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class));
+                .when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
 
         outboxPublisher.processOutboxEvents();
 

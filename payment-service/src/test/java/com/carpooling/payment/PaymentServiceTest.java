@@ -163,5 +163,40 @@ class PaymentServiceTest {
 
         assertEquals(new BigDecimal("60.50"), total);
     }
+
+    @Test
+    @DisplayName("Idempotência: Deve retornar pagamento existente se reserva já foi paga sem criar duplicado")
+    void testCreatePayment_Idempotent_ReturnsExistingPayment() {
+        Payment existingPayment = Payment.builder()
+                .id(99L)
+                .tripId(1L)
+                .reservationId(50L)
+                .passengerId(2L)
+                .driverId(1L)
+                .amount(new BigDecimal("15.50"))
+                .method(PaymentMethod.MBWAY)
+                .status(PaymentStatus.COMPLETED)
+                .transactionId("MBWAY-ORIGINAL-99")
+                .build();
+
+        when(paymentRepository.findByReservationId(50L)).thenReturn(Optional.of(existingPayment));
+
+        CreatePaymentRequest duplicateReq = CreatePaymentRequest.builder()
+                .tripId(1L)
+                .reservationId(50L)
+                .passengerId(2L)
+                .driverId(1L)
+                .amount(new BigDecimal("15.50"))
+                .method(PaymentMethod.MBWAY)
+                .build();
+
+        PaymentDTO result = paymentService.createPayment(duplicateReq);
+
+        assertNotNull(result);
+        assertEquals(99L, result.getId());
+        assertEquals("MBWAY-ORIGINAL-99", result.getTransactionId());
+        verify(paymentRepository, never()).save(any());
+    }
 }
+
 

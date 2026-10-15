@@ -103,10 +103,10 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         List<String> roles = claims.get(ROLES_CLAIM, List.class);
         boolean isAdmin = roles != null && roles.stream().anyMatch(r -> "ADMIN".equalsIgnoreCase(r.toString()));
 
-        // 5. RBAC: Proteger rotas administrativas (/api/admin/**)
-        if (path.startsWith("/api/admin")) {
+        // 5. RBAC: Proteger rotas administrativas (/api/admin/**, /api/auth/users, /block, /unblock)
+        if (path.startsWith("/api/admin") || path.equals("/api/auth/users") || path.endsWith("/block") || path.endsWith("/unblock")) {
             if (!isAdmin) {
-                log.warn("Tentativa de acesso não autorizado a rota de admin: user={} path={}", email, path);
+                log.warn("Tentativa de acesso não autorizado a rota administrativa ou operação de utilizador: user={} path={}", email, path);
                 return forbiddenResponse(exchange, "Acesso restrito: permissão de Administrador (ADMIN) necessária");
             }
         }

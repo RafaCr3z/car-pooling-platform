@@ -26,8 +26,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return ServiceSecurity.build(http, jwtDecoder(), auth -> auth
-                .anyRequest().authenticated()
-        );
+        return ServiceSecurity.build(http, jwtDecoder(), auth -> {
+            // Regras adicionais; o fallback anyRequest().authenticated() é garantido pelo ServiceSecurity
+        });
     }
 }

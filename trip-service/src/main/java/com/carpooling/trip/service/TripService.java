@@ -272,7 +272,12 @@ public class TripService {
 
     @Transactional
     public ReservationDTO createReservation(CreateReservationRequest request, CurrentUser currentUser) {
-        Trip trip = tripRepository.findById(request.getTripId())
+        if (request.getNumberOfSeats() == null || request.getNumberOfSeats() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O número de lugares deve ser superior a zero");
+        }
+
+        Trip trip = tripRepository.findByIdWithLock(request.getTripId())
+                .or(() -> tripRepository.findById(request.getTripId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Viagem não encontrada"));
 
         if (trip.getStatus() != TripStatus.OPEN) {
@@ -291,7 +296,7 @@ public class TripService {
             }
         }
 
-        int requestedSeats = request.getNumberOfSeats() != null ? request.getNumberOfSeats() : 1;
+        int requestedSeats = request.getNumberOfSeats();
         int remainingSeats = trip.getAvailableSeats() - trip.getOccupiedSeats();
 
         if (requestedSeats > remainingSeats) {
@@ -331,7 +336,20 @@ public class TripService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reserva não encontrada"));
 
-        Trip trip = reservation.getTrip();
+        // Idempotência: se já confirmada, devolver imediatamente sem duplicar assentos
+        if (reservation.getStatus() == ReservationStatus.CONFIRMED) {
+            log.info("Reserva ID: {} já se encontra CONFIRMED. Retornando DTO (idempotente).", reservationId);
+            return mapReservationToDTO(reservation);
+        }
+
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Apenas reservas no estado PENDING podem ser confirmadas (estado atual: " + reservation.getStatus() + ")");
+        }
+
+        Trip trip = tripRepository.findByIdWithLock(reservation.getTrip().getId())
+                .orElse(reservation.getTrip());
+
         if (currentUser != null) {
             currentUser.requireSelfOrAdmin(trip.getDriverId());
         }
@@ -396,7 +414,15 @@ public class TripService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reserva não encontrada"));
 
-        Trip trip = reservation.getTrip();
+        // Idempotência: se já cancelada, devolver imediatamente
+        if (reservation.getStatus() == ReservationStatus.CANCELLED) {
+            log.info("Reserva ID: {} já se encontra CANCELLED. Retornando DTO (idempotente).", reservationId);
+            return mapReservationToDTO(reservation);
+        }
+
+        Trip trip = tripRepository.findByIdWithLock(reservation.getTrip().getId())
+                .orElse(reservation.getTrip());
+
         if (currentUser != null) {
             boolean isPassenger = currentUser.is(reservation.getPassengerId());
             boolean isDriver = currentUser.is(trip.getDriverId());
@@ -412,6 +438,8 @@ public class TripService {
             if (trip.getStatus() == TripStatus.FULL && trip.getOccupiedSeats() < trip.getAvailableSeats()) {
                 trip.setStatus(TripStatus.OPEN);
             }
+            double saved = trip.getDistance() * 0.115 * trip.getOccupiedSeats();
+            trip.setCo2SavedKg(BigDecimal.valueOf(saved).setScale(1, RoundingMode.HALF_UP).doubleValue());
             tripRepository.save(trip);
         }
 

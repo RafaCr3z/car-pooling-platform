@@ -8,7 +8,8 @@ import com.carpooling.trip.repository.OutboxRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Component
 @RequiredArgsConstructor
@@ -23,10 +26,11 @@ import java.util.List;
 public class OutboxPublisher {
 
     private final OutboxRepository outboxRepository;
-    private final AmqpTemplate rabbitTemplate;
+    private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
 
     private static final int MAX_RETRIES = 5;
+    private static final long CONFIRM_TIMEOUT_SECONDS = 5;
 
     @Scheduled(fixedDelayString = "${outbox.publisher.delay:3000}")
     @Transactional
@@ -49,12 +53,25 @@ public class OutboxPublisher {
                     eventPayload = objectMapper.readValue(event.getPayload(), Object.class);
                 }
 
-                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, event.getRoutingKey(), eventPayload);
+                CorrelationData correlationData = new CorrelationData(String.valueOf(event.getId()));
+                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, event.getRoutingKey(), eventPayload, correlationData);
+
+                try {
+                    CorrelationData.Confirm confirm = correlationData.getFuture().get(CONFIRM_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                    if (confirm != null && !confirm.isAck()) {
+                        throw new IllegalStateException("RabbitMQ NACK recebido para evento Outbox #" + event.getId()
+                                + (confirm.getReason() != null ? ": " + confirm.getReason() : ""));
+                    }
+                } catch (TimeoutException te) {
+                    log.warn("Confirmação de publicação não obtida dentro de {}s para evento Outbox #{}; mantendo PENDING para reprocessamento",
+                            CONFIRM_TIMEOUT_SECONDS, event.getId());
+                    throw te;
+                }
 
                 event.setStatus("SENT");
                 event.setProcessedAt(LocalDateTime.now());
                 event.setErrorMessage(null);
-                log.info("Evento Outbox #{} [{}] publicado com sucesso para RabbitMQ (chave: {})",
+                log.info("Evento Outbox #{} [{}] publicado e confirmado com sucesso no RabbitMQ (chave: {})",
                         event.getId(), event.getEventType(), event.getRoutingKey());
             } catch (Exception e) {
                 event.setRetryCount(event.getRetryCount() + 1);

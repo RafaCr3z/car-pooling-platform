@@ -51,13 +51,24 @@ public class AuthController {
     }
 
     @PutMapping("/user/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> updateUser(
+            @PathVariable Long id,
+            @RequestBody UserDTO userDTO,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
+        if (jwt != null) {
+            com.carpooling.common.security.CurrentUser.from(jwt).requireSelfOrAdmin(id);
+        }
         UserDTO updated = authService.updateUser(id, userDTO);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/user/{id}")
-    public ResponseEntity<Void> deactivateUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deactivateUser(
+            @PathVariable Long id,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
+        if (jwt != null) {
+            com.carpooling.common.security.CurrentUser.from(jwt).requireSelfOrAdmin(id);
+        }
         authService.deactivateUser(id);
         return ResponseEntity.noContent().build();
     }

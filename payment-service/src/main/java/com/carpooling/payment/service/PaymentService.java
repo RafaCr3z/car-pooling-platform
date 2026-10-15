@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,15 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     
     public PaymentDTO createPayment(CreatePaymentRequest request) {
+        if (request.getReservationId() != null) {
+            Optional<Payment> existing = paymentRepository.findByReservationId(request.getReservationId());
+            if (existing.isPresent()) {
+                log.info("Pagamento já existente para reserva ID={}: retornando registo ID={} (idempotente)",
+                        request.getReservationId(), existing.get().getId());
+                return toDTO(existing.get());
+            }
+        }
+
         PaymentMethod method = request.getMethod() != null ? request.getMethod() : PaymentMethod.MBWAY;
         String txnPrefix = method == PaymentMethod.MBWAY ? "MBWAY-" : "CARD-";
 

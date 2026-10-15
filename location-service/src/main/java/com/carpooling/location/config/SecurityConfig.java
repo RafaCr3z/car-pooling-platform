@@ -28,7 +28,6 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return ServiceSecurity.build(http, jwtDecoder(), auth -> auth
                 .requestMatchers("/api/locations/**").permitAll()
-                .anyRequest().authenticated()
         );
     }
 }

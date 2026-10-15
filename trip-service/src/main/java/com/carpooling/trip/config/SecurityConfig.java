@@ -31,7 +31,6 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return ServiceSecurity.build(http, jwtDecoder(), auth -> auth
                 .requestMatchers(HttpMethod.GET, "/api/trips", "/api/trips/search", "/api/trips/available", "/api/trips/{id}").permitAll()
-                .anyRequest().authenticated()
         );
     }
 
