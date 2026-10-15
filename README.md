@@ -540,7 +540,7 @@ kubectl kustomize k8s/
 - **Total de Recursos Validados:** 30 objetos K8s (1 Namespace, 1 ConfigMap, 1 Secret, 13 Deployments com Probes e Limits, 13 Services e 1 Ingress).
 - **Service Discovery Unificado:** Eureka Service Registry integrado no cluster K8s (`k8s/03-infrastructure.yaml`), viabilizando a resolução dinâmica de rotas `lb://` no API Gateway.
 - **Auditoria DevSecOps:** Verificação estrita com **Trivy** versão fixada `aquasecurity/trivy-action@0.28.0` configurado com `exit-code: 1` em vulnerabilidades críticas.
-- **Gestão Segura de Credenciais:** Template declarativo `k8s/02-secrets.yaml.template` e `.env.example` para suporte a GitOps com Bitnami Sealed Secrets ou HashiCorp Vault.
+- **Gestão Segura de Credenciais (Estratégia CI vs. Produção):** O manifesto `k8s/02-secrets.yaml` mantém exclusivamente valores *dummy* em Base64 para garantir a execução com sucesso da validação sintática `kubectl kustomize k8s/` no GitHub Actions CI e localmente. Em produção, os segredos reais são geridos de forma segura fora do Git através do template `k8s/02-secrets.yaml.template` e `.env.example`, recorrendo a **Bitnami Sealed Secrets**, **HashiCorp Vault** ou injeção dinâmica via pipeline de CI/CD.
 
 ---
 
