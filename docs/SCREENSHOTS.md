@@ -93,3 +93,27 @@ Status dos alvos de monitorização colhendo métricas do Spring Boot Actuator (
 Visão global da Topic Exchange `carpooling.topic`, das filas duráveis de eventos e do débito de mensagens assíncronas.
 
 ![RabbitMQ Management](screenshots/12_rabbitmq_overview.png)
+
+---
+
+## 🔬 3. Qualidade de Software, Testes Automatizados & Cloud Native
+
+### 3.1 Execução da Suíte Completa de Testes Maven Reactor (51 Testes)
+Execução automatizada de testes unitários e de integração em todos os 10 módulos com 100% de aprovação (`BUILD SUCCESS`).
+
+![Execução dos Testes Automatizados](screenshots/13_automated_tests_reactor.png)
+
+---
+
+### 3.2 Quadro de Cobertura Global de Testes por Microsserviço
+Visão consolidada das 14 suítes JUnit 5 cobrindo Outbox Pattern, RabbitMQ DLQ, Redis Rate Limiting, autenticação JWT e regras de sustentabilidade.
+
+![Quadro de Cobertura Global](screenshots/15_test_coverage_breakdown.png)
+
+---
+
+### 3.3 Validação de Kubernetes (Kustomize) & Auditoria DevSecOps (Trivy)
+Síntese dos 30 recursos declarativos K8s e verificação de segurança das imagens e dependências sem vulnerabilidades críticas.
+
+![Validação K8s e DevSecOps](screenshots/14_k8s_kustomize_devsecops.png)
+

@@ -312,6 +312,8 @@ A plataforma dispõe de interfaces completas validadas com dados realistas. A do
 | **Service Registry Eureka** | [![Eureka](docs/screenshots/09_eureka_registry.png)](docs/SCREENSHOTS.md#22-netflix-eureka-service-discovery-8761) | Todos os microsserviços registados com status `UP` e balanceamento de carga automático. |
 | **Prometheus Targets** | [![Prometheus](docs/screenshots/10_prometheus_targets.png)](docs/SCREENSHOTS.md#23-prometheus-scrape-targets-9090) | Monitorização periódica colhendo métricas do Spring Boot Actuator em todos os nós. |
 | **Filas do RabbitMQ** | [![RabbitMQ](docs/screenshots/12_rabbitmq_overview.png)](docs/SCREENSHOTS.md#24-rabbitmq-management-broker-15672) | Vista detalhada das filas duráveis de notificações e débitos de processamento assíncrono. |
+| **Suíte de Testes (51 Testes)** | [![Testes](docs/screenshots/13_automated_tests_reactor.png)](docs/SCREENSHOTS.md#31-execu%C3%A7%C3%A3o-da-su%C3%ADte-completa-de-testes-maven-reactor-51-testes) | Execução automatizada completa no Maven Reactor com 100% de aprovação (51/51). |
+| **DevSecOps & Kubernetes** | [![K8s](docs/screenshots/14_k8s_kustomize_devsecops.png)](docs/SCREENSHOTS.md#33-valida%C3%A7%C3%A3o-de-kubernetes-kustomize--auditoria-devsecops-trivy) | Síntese de 30 recursos K8s declarativos e auditoria de segurança Trivy (0 falhas críticas). |
 
 ---
 
@@ -457,6 +459,8 @@ mvn test
 
 ### 📋 Evidência de Execução & Relatório do Maven Reactor
 
+![Execução dos Testes Automatizados no Terminal](docs/screenshots/13_automated_tests_reactor.png)
+
 ```text
 [INFO] ------------------------------------------------------------------------
 [INFO] Reactor Summary for Car Pooling Platform 1.0.0:
@@ -481,6 +485,8 @@ mvn test
 
 ### 📊 Tabela de Resultados por Módulo e Suíte de Testes
 
+![Quadro Consolidado de Cobertura e Resultados](docs/screenshots/15_test_coverage_breakdown.png)
+
 | Módulo | Suíte de Testes (JUnit 5) | Qtd. | Falhas | Erros | Duração | Regras de Negócio & Cenários Cobertos |
 | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
 | **`eureka-server`** | `EurekaServerApplicationTest` | **1** | 0 | 0 | 0.070s | Sanity check e integridade do arranque do servidor de descoberta Netflix Eureka. |
@@ -495,7 +501,9 @@ mvn test
 | **`frontend-service`** | `NotificationServiceTest` | **2** | 0 | 0 | 0.992s | Prevenção de NPEs e tratamento resiliente de entradas nulas na comunicação WebClient com o gateway. |
 | **Total Global** | **14 Suítes em 10 Módulos** | **51** | **0** | **0** | **10.03s** | **Taxa de Aprovação: 100% (`BUILD SUCCESS`)** |
 
-### ☸️ Validação de Infraestrutura Kubernetes (`k8s/`)
+### ☸️ Validação de Infraestrutura Kubernetes (`k8s/`) & DevSecOps
+
+![Validação K8s e Scanner Trivy](docs/screenshots/14_k8s_kustomize_devsecops.png)
 
 Todos os manifestos foram sintetizados e validados com conformidade total contra o motor Kustomize:
 
@@ -504,6 +512,7 @@ kubectl kustomize k8s/
 ```
 - **Total de Recursos Validados:** 30 objetos K8s (1 Namespace, 1 ConfigMap, 1 Secret, 13 Deployments com Probes e Limits, 13 Services e 1 Ingress).
 - **Resultado:** `0 Erros` sintáticos ou de referência de portas/serviços.
+- **Auditoria DevSecOps:** Verificação estrita com **Trivy** (`0 vulnerabilidades críticas/altas`) e execução não-root (`USER appuser`) em todos os contentores.
 
 ---
 
