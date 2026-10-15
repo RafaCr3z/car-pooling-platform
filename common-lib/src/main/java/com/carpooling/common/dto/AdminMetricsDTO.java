@@ -1,4 +1,4 @@
-package com.carpooling.admin.dto;
+package com.carpooling.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 @Builder
@@ -23,7 +22,7 @@ public class AdminMetricsDTO {
     private long blockedUsers;
     private BigDecimal totalRevenueTransacted;
     private double totalCo2SavedKg;
-    private double treesPlantedEquivalent; // ~22kg CO2 = 1 tree/year
+    private double treesPlantedEquivalent;
     private double averageUserRating;
     private String systemHealthStatus;
 }

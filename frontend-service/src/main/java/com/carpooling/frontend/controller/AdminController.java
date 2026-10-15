@@ -1,7 +1,7 @@
 package com.carpooling.frontend.controller;
 
 import com.carpooling.frontend.dto.AdminLogDTO;
-import com.carpooling.frontend.dto.AdminMetricsDTO;
+import com.carpooling.common.dto.AdminMetricsDTO;
 import com.carpooling.common.dto.UserSummaryDTO;
 import com.carpooling.frontend.service.AdminDashboardService;
 import jakarta.servlet.http.HttpSession;

@@ -6,12 +6,15 @@ import com.carpooling.trip.repository.TripRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Component
+@Profile({"!k8s & !prod"})
 @RequiredArgsConstructor
 @Slf4j
 public class DataInitializer implements CommandLineRunner {
@@ -20,6 +23,14 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        try {
+            initializeDemoTrips();
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Viagens de demonstração já inseridas concorrentemente por outra réplica. Ignorando: {}", e.getMessage());
+        }
+    }
+
+    private void initializeDemoTrips() {
         if (tripRepository.count() > 0) {
             log.info("Base de dados de viagens já possui dados. Ignorando inicialização.");
             return;

@@ -43,4 +43,23 @@ class ApiResponseTest {
         assertEquals(42, response.getData());
         assertEquals(123456789L, response.getTimestamp());
     }
+
+    @Test
+    @DisplayName("Deve construir resposta via métodos estáticos success e error")
+    void testStaticFactoryMethods() {
+        ApiResponse<String> res1 = ApiResponse.success("dados-teste");
+        assertTrue(res1.isSuccess());
+        assertEquals("dados-teste", res1.getData());
+        assertTrue(res1.getTimestamp() > 0);
+
+        ApiResponse<Integer> res2 = ApiResponse.success("Criado com sucesso", 100);
+        assertTrue(res2.isSuccess());
+        assertEquals("Criado com sucesso", res2.getMessage());
+        assertEquals(100, res2.getData());
+
+        ApiResponse<Void> res3 = ApiResponse.error("Falha na operação");
+        assertFalse(res3.isSuccess());
+        assertEquals("Falha na operação", res3.getMessage());
+        assertNull(res3.getData());
+    }
 }

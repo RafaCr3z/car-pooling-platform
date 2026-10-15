@@ -3,7 +3,7 @@ package com.carpooling.admin;
 import com.carpooling.admin.client.AuthServiceClient;
 import com.carpooling.admin.client.PaymentServiceClient;
 import com.carpooling.admin.client.TripServiceClient;
-import com.carpooling.admin.dto.AdminMetricsDTO;
+import com.carpooling.common.dto.AdminMetricsDTO;
 import com.carpooling.admin.dto.TripResponseDTO;
 import com.carpooling.admin.entity.AdminLog;
 import com.carpooling.admin.repository.AdminLogRepository;

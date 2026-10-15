@@ -98,15 +98,19 @@ Visão global da Topic Exchange `carpooling.topic`, das filas duráveis de event
 
 ## 🔬 3. Qualidade de Software, Testes Automatizados & Cloud Native
 
-### 3.1 Execução da Suíte Completa de Testes Maven Reactor (110 Testes)
-Execução automatizada de testes unitários e de integração JPA em todos os 11 módulos com 100% de aprovação (`BUILD SUCCESS`).
+### 3.1 Execução da Suíte Completa de Testes Maven Reactor (121 Testes)
+Execução automatizada de testes unitários e de integração JPA em todos os 11 módulos com 100% de aprovação (`BUILD SUCCESS`, 0 falhas, 0 erros).
 
 ![Execução dos Testes Automatizados](screenshots/13_automated_tests_reactor.png)
 
 ---
 
 ### 3.2 Quadro de Cobertura Global de Testes por Microsserviço
-Visão consolidada das 19 suítes JUnit 5 cobrindo Testes de Integração JPA (Fluxo Reserva -> Outbox -> RabbitMQ), Defesa contra IDOR, Concorrência Outbox (`SKIP LOCKED`), Zero-Trust Gateway JWT Auth, RBAC Admin, proteção RGPD (`PiiMasker`) e RabbitMQ DLQ.
+Visão consolidada das 21 suítes JUnit 5 cobrindo:
+- **Tratamento Global de Exceções:** `@RestControllerAdvice` centralizado na `common-lib` com respostas uniformes `ApiResponse<Void>`
+- **Testes de Integração JPA & Idempotência:** Fluxo Reserva -> Outbox no `trip-service` e prevenção de double spending com `transaction_id UNIQUE` no `payment-service`
+- **Concorrência Cloud Native:** Arranque idempotente em Kubernetes via `@Profile({"!k8s & !prod"})` e bloqueio pessimista Outbox `SKIP LOCKED`
+- **Zero-Trust & Defesa em Profundidade:** Gateway JWT Filter, RBAC Admin `/api/admin/**`, anti-IDOR via `CurrentUser`, Netty timeouts no `WebClient` e mascaramento RGPD Art. 5 (`PiiMasker`)
 
 ![Quadro de Cobertura Global](screenshots/15_test_coverage_breakdown.png)
 

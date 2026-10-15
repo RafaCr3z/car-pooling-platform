@@ -19,4 +19,16 @@ public class ApiResponse<T> {
         this.data = data;
         this.timestamp = System.currentTimeMillis();
     }
+
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(true, "Operação realizada com sucesso", data);
+    }
+
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return new ApiResponse<>(true, message, data);
+    }
+
+    public static <T> ApiResponse<T> error(String message) {
+        return new ApiResponse<>(false, message, null);
+    }
 }

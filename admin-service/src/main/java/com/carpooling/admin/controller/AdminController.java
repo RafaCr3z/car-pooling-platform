@@ -1,6 +1,6 @@
 package com.carpooling.admin.controller;
 
-import com.carpooling.admin.dto.AdminMetricsDTO;
+import com.carpooling.common.dto.AdminMetricsDTO;
 import com.carpooling.admin.dto.TripResponseDTO;
 import com.carpooling.admin.entity.AdminLog;
 import com.carpooling.admin.service.AdminService;

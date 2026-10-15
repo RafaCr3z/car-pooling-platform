@@ -1,8 +1,8 @@
 package com.carpooling.frontend.service;
 
 import com.carpooling.common.dto.UserSummaryDTO;
+import com.carpooling.common.dto.AdminMetricsDTO;
 import com.carpooling.frontend.dto.AdminLogDTO;
-import com.carpooling.frontend.dto.AdminMetricsDTO;
 import com.carpooling.frontend.dto.TripDTO;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;

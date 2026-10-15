@@ -8,6 +8,8 @@ import com.carpooling.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @Component
+@Profile({"!k8s & !prod"})
 @RequiredArgsConstructor
 @Slf4j
 public class DataInitializer implements CommandLineRunner {
@@ -25,6 +28,14 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        try {
+            initializeDemoUsers();
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Utilizadores de demonstração já inseridos concorrentemente por outra réplica. Ignorando: {}", e.getMessage());
+        }
+    }
+
+    private void initializeDemoUsers() {
         if (userRepository.count() > 0) {
             log.info("Base de dados de utilizadores já possui dados. Ignorando inicialização.");
             return;

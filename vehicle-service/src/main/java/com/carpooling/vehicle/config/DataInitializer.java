@@ -7,11 +7,14 @@ import com.carpooling.vehicle.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
 @Component
+@Profile({"!k8s & !prod"})
 @RequiredArgsConstructor
 @Slf4j
 public class DataInitializer implements CommandLineRunner {
@@ -20,6 +23,14 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        try {
+            initializeDemoVehicles();
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Veículos de demonstração já inseridos concorrentemente por outra réplica. Ignorando: {}", e.getMessage());
+        }
+    }
+
+    private void initializeDemoVehicles() {
         if (vehicleRepository.count() > 0) {
             log.info("Base de dados de veículos já possui dados. Ignorando inicialização.");
             return;
