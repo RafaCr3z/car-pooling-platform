@@ -98,22 +98,22 @@ Visão global da Topic Exchange `carpooling.topic`, das filas duráveis de event
 
 ## 🔬 3. Qualidade de Software, Testes Automatizados & Cloud Native
 
-### 3.1 Execução da Suíte Completa de Testes Maven Reactor (104 Testes)
-Execução automatizada de testes unitários e de integração em todos os 11 módulos com 100% de aprovação (`BUILD SUCCESS`).
+### 3.1 Execução da Suíte Completa de Testes Maven Reactor (110 Testes)
+Execução automatizada de testes unitários e de integração JPA em todos os 11 módulos com 100% de aprovação (`BUILD SUCCESS`).
 
 ![Execução dos Testes Automatizados](screenshots/13_automated_tests_reactor.png)
 
 ---
 
 ### 3.2 Quadro de Cobertura Global de Testes por Microsserviço
-Visão consolidada das 19 suítes JUnit 5 cobrindo Zero-Trust Gateway JWT Auth, RBAC Admin, proteção RGPD (PiiMasker), Transactional Outbox, RabbitMQ DLQ, Redis Rate Limiting e sustentabilidade.
+Visão consolidada das 19 suítes JUnit 5 cobrindo Testes de Integração JPA (Fluxo Reserva -> Outbox -> RabbitMQ), Defesa contra IDOR, Concorrência Outbox (`SKIP LOCKED`), Zero-Trust Gateway JWT Auth, RBAC Admin, proteção RGPD (`PiiMasker`) e RabbitMQ DLQ.
 
 ![Quadro de Cobertura Global](screenshots/15_test_coverage_breakdown.png)
 
 ---
 
 ### 3.3 Validação de Kubernetes (Kustomize) & Auditoria DevSecOps (Trivy)
-Síntese dos 30 recursos declarativos K8s (incluindo Eureka Discovery em cluster e secrets externalizados) e verificação estrita de segurança DevSecOps (Trivy @0.28.0 com exit-code: 1 em CRITICAL).
+Síntese dos 30 recursos declarativos K8s (Eureka em cluster, segredos padronizados em Base64 e template para Sealed Secrets) e verificação estrita de segurança DevSecOps (Trivy @0.28.0 com exit-code: 1 em CRITICAL).
 
 ![Validação K8s e DevSecOps](screenshots/14_k8s_kustomize_devsecops.png)
 

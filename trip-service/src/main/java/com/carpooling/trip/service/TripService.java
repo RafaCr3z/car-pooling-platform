@@ -3,6 +3,7 @@ package com.carpooling.trip.service;
 import com.carpooling.common.dto.VehicleSummaryDTO;
 import com.carpooling.common.event.ReservationEvent;
 import com.carpooling.common.event.TripEvent;
+import com.carpooling.common.security.CurrentUser;
 import com.carpooling.trip.client.LocationClient;
 import com.carpooling.trip.client.VehicleClient;
 import com.carpooling.trip.config.RabbitMQConfig;
@@ -20,8 +21,10 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -45,6 +48,20 @@ public class TripService {
 
     @Transactional
     public TripDTO createTrip(CreateTripRequest request) {
+        return createTrip(request, null);
+    }
+
+    @Transactional
+    public TripDTO createTrip(CreateTripRequest request, CurrentUser currentUser) {
+        if (currentUser != null && !currentUser.isAdmin()) {
+            if (request.getDriverId() == null) {
+                request.setDriverId(currentUser.userId());
+            } else if (!currentUser.is(request.getDriverId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Não pode criar uma viagem associada a outro condutor");
+            }
+        }
+
         log.info("A criar viagem para driverId={}: {} -> {}", 
                 request.getDriverId(), request.getDepartureLocation(), request.getDestinationLocation());
 
@@ -215,8 +232,17 @@ public class TripService {
 
     @Transactional
     public TripDTO updateTripStatus(Long tripId, String status) {
+        return updateTripStatus(tripId, status, null);
+    }
+
+    @Transactional
+    public TripDTO updateTripStatus(Long tripId, String status, CurrentUser currentUser) {
         Trip trip = tripRepository.findById(tripId)
-                .orElseThrow(() -> new RuntimeException("Viagem não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Viagem não encontrada"));
+
+        if (currentUser != null) {
+            currentUser.requireSelfOrAdmin(trip.getDriverId());
+        }
 
         TripStatus newStatus = TripStatus.valueOf(status.toUpperCase());
         trip.setStatus(newStatus);
@@ -241,18 +267,36 @@ public class TripService {
 
     @Transactional
     public ReservationDTO createReservation(CreateReservationRequest request) {
+        return createReservation(request, null);
+    }
+
+    @Transactional
+    public ReservationDTO createReservation(CreateReservationRequest request, CurrentUser currentUser) {
         Trip trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new RuntimeException("Viagem não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Viagem não encontrada"));
 
         if (trip.getStatus() != TripStatus.OPEN) {
-            throw new RuntimeException("Esta viagem não se encontra aberta a novas reservas");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Esta viagem não se encontra aberta a novas reservas");
+        }
+
+        if (currentUser != null && !currentUser.isAdmin()) {
+            if (request.getPassengerId() == null) {
+                request.setPassengerId(currentUser.userId());
+            } else if (!currentUser.is(request.getPassengerId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Não pode criar uma reserva associada a outro passageiro");
+            }
+            if (request.getPassengerEmail() == null && currentUser.email() != null) {
+                request.setPassengerEmail(currentUser.email());
+            }
         }
 
         int requestedSeats = request.getNumberOfSeats() != null ? request.getNumberOfSeats() : 1;
         int remainingSeats = trip.getAvailableSeats() - trip.getOccupiedSeats();
 
         if (requestedSeats > remainingSeats) {
-            throw new RuntimeException("Lugares insuficientes. Apenas restam " + remainingSeats + " lugares disponíveis.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Lugares insuficientes. Apenas restam " + remainingSeats + " lugares disponíveis.");
         }
 
         BigDecimal totalPrice = trip.getCostPerPassenger().multiply(BigDecimal.valueOf(requestedSeats));
@@ -279,14 +323,23 @@ public class TripService {
 
     @Transactional
     public ReservationDTO confirmReservation(Long reservationId) {
+        return confirmReservation(reservationId, null);
+    }
+
+    @Transactional
+    public ReservationDTO confirmReservation(Long reservationId, CurrentUser currentUser) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reserva não encontrada"));
 
         Trip trip = reservation.getTrip();
+        if (currentUser != null) {
+            currentUser.requireSelfOrAdmin(trip.getDriverId());
+        }
+
         int remaining = trip.getAvailableSeats() - trip.getOccupiedSeats();
 
         if (reservation.getNumberOfSeats() > remaining) {
-            throw new RuntimeException("Não há lugares suficientes para confirmar esta reserva");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Não há lugares suficientes para confirmar esta reserva");
         }
 
         reservation.setStatus(ReservationStatus.CONFIRMED);
@@ -311,8 +364,18 @@ public class TripService {
 
     @Transactional
     public ReservationDTO rejectReservation(Long reservationId, String reason) {
+        return rejectReservation(reservationId, reason, null);
+    }
+
+    @Transactional
+    public ReservationDTO rejectReservation(Long reservationId, String reason, CurrentUser currentUser) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reserva não encontrada"));
+
+        Trip trip = reservation.getTrip();
+        if (currentUser != null) {
+            currentUser.requireSelfOrAdmin(trip.getDriverId());
+        }
 
         reservation.setStatus(ReservationStatus.REJECTED);
         reservation = reservationRepository.save(reservation);
@@ -325,10 +388,24 @@ public class TripService {
 
     @Transactional
     public ReservationDTO cancelReservation(Long reservationId) {
+        return cancelReservation(reservationId, null);
+    }
+
+    @Transactional
+    public ReservationDTO cancelReservation(Long reservationId, CurrentUser currentUser) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reserva não encontrada"));
 
         Trip trip = reservation.getTrip();
+        if (currentUser != null) {
+            boolean isPassenger = currentUser.is(reservation.getPassengerId());
+            boolean isDriver = currentUser.is(trip.getDriverId());
+            boolean isAdmin = currentUser.isAdmin();
+            if (!isPassenger && !isDriver && !isAdmin) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Sem permissão para cancelar esta reserva: apenas o passageiro, condutor ou administrador podem cancelar");
+            }
+        }
 
         if (reservation.getStatus() == ReservationStatus.CONFIRMED) {
             trip.setOccupiedSeats(Math.max(0, trip.getOccupiedSeats() - reservation.getNumberOfSeats()));

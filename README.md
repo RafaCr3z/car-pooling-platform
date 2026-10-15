@@ -14,7 +14,7 @@
 [![Tempo](https://img.shields.io/badge/Grafana%20Tempo-Distributed%20Tracing%203200-F46800.svg)](https://grafana.com/oss/tempo/)
 [![Loki](https://img.shields.io/badge/Grafana%20Loki-Centralized%20Logs%203100-F46800.svg)](https://grafana.com/oss/loki/)
 [![Grafana](https://img.shields.io/badge/Grafana-Observability%203001-F46800.svg)](https://grafana.com/)
-[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(104)-25A162.svg)](https://junit.org/junit5/)
+[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(110)-25A162.svg)](https://junit.org/junit5/)
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-yellow.svg)](https://resilience4j.readme.io/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-18%20Containers-2496ED.svg)](https://www.docker.com/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-K8s%20Manifests-326CE5.svg)](https://kubernetes.io/)
@@ -262,7 +262,8 @@ Em sistemas distribuídos, a escrita numa base de dados relacional e a publicaç
 Para resolver isto com consistência estrita:
 - **Tabela `outbox_events`:** Criada no PostgreSQL do `trip-service` via migração Flyway `V2__create_outbox_table.sql`.
 - **Gravação Atómica:** Ao criar ou atualizar viagens e reservas, o `TripService` persiste o estado do negócio e o registo do evento na tabela `outbox_events` (com estado `PENDING`) no âmbito da mesma transação local `@Transactional`.
-- **Publicador Assíncrono (`OutboxPublisher`):** Um worker agendado lê os eventos pendentes em lotes, publica-os no RabbitMQ através do `AmqpTemplate` e atualiza o estado para `SENT` com carimbo temporal.
+- **Prevenção de Duplicados em Múltiplas Réplicas (`SKIP LOCKED`):** O `OutboxRepository` seleciona os registos pendentes utilizando bloqueio pessimista `@Lock(LockModeType.PESSIMISTIC_WRITE)` com hint `jakarta.persistence.lock.timeout = -2` (`FOR UPDATE SKIP LOCKED`). Quando o Kubernetes escala o `trip-service` para 2 ou mais réplicas, cada nó tranca linhas distintas e salta as já bloqueadas por outros workers, impedindo eventos duplicados.
+- **Publisher Confirms no RabbitMQ:** Configuração de `spring.rabbitmq.publisher-confirm-type: correlated` e `publisher-returns: true`, garantindo confirmação assíncrona pelo broker de que a mensagem foi persistida na fila antes de marcar o evento como `SENT`.
 - **Garantia de Entrega:** Entrega do tipo *At-Least-Once*, com política de re-tentativas (até 5 tentativas com registo de `error_message` antes de transitar para `FAILED`) caso o broker RabbitMQ sofra uma paragem temporária.
 
 ### 4.10 Segurança Zero-Trust na Borda, Defesa contra IDOR & Conformidade com RGPD
@@ -271,16 +272,21 @@ A plataforma implementa uma postura de segurança Zero-Trust na borda com autent
    - Interceta todas as requisições à entrada do cluster, validando a assinatura criptográfica HMAC-SHA256 e o tempo de expiração do token.
    - **Whitelist Restrita:** Permite apenas rotas públicas essenciais (`/api/auth/login`, `/api/auth/register`, rotas do Actuator e documentação Swagger).
    - **Controlo de Acesso Baseado em Papéis (RBAC):** Protege o namespace `/api/admin/**`, exigindo obrigatoriamente a claim `roles` com valor `ADMIN` (retornando `403 Forbidden` se não autorizado).
-2. **Sanitização de Cabeçalhos & Defesa contra Spoofing de Identidade:**
+2. **Defesa Rigorosa contra IDOR (Insecure Direct Object Reference):**
+   - No `trip-service`, os métodos de confirmação, rejeição e cancelamento de reservas utilizam a identidade autenticada `CurrentUser` extraída do JWT validado.
+   - Apenas o condutor titular da viagem pode confirmar ou rejeitar reservas associadas à sua viatura (`403 Forbidden` para qualquer terceiro).
+   - O cancelamento de reservas é restrito em exclusivo ao passageiro que efetuou a reserva, ao condutor da viagem ou a um `ADMIN`, impedindo a manipulação indevida de dados apenas pelo conhecimento do ID da reserva.
+3. **Sanitização de Cabeçalhos & Defesa contra Spoofing de Identidade:**
    - O Gateway purga quaisquer cabeçalhos externos `X-User-*` fornecidos pelo cliente e injeta downstream cabeçalhos verificados a partir do token (`X-User-Id`, `X-User-Email`, `X-User-Roles`).
    - O `admin-service` consome a identidade do auditor exclusivamente a partir do cabeçalho validado `X-User-Email`, impedindo a falsificação de relatórios de auditoria por parâmetros de query string.
-3. **Minimização de Dados Pessoais (RGPD Artigo 5.º, n.º 1, alínea c):**
-   - Através do utilitário `PiiMasker`, listagens administrativas mascaram automaticamente endereços de email (`j********a@example.com`) e contactos telefónicos (`+351******678`), assegurando conformidade estrita com o Regulamento Geral sobre a Proteção de Dados.
-4. **Propagação Segura entre Microsserviços (Feign Token Relay):**
+4. **Minimização de Dados Pessoais (RGPD Artigo 5.º, n.º 1, alínea c):**
+   - Através do utilitário `PiiMasker`, listagens administrativas mascaram automaticamente endereços de email (`j***a@c***g.pt`) e contactos telefónicos (`+351 91***12`), assegurando conformidade estrita com o Regulamento Geral sobre a Proteção de Dados.
+5. **Propagação Segura entre Microsserviços (Feign Token Relay):**
    - Comunicações síncronas entre serviços propagam o token original via `BearerTokenRelayInterceptor` mantendo o contexto de segurança sem alterar threads do Circuit Breaker (`disable-thread-pool: true`).
 
 ### 4.11 Orquestração Kubernetes Cloud-Native & DevSecOps
 - **Service Discovery Nativo no Cluster:** Inclusão do `eureka-server` como Deployment e Service no namespace `carpooling`, permitindo resolução de rotas `lb://` no API Gateway através de injeção automática de `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE`.
+- **Segredos Codificados em Base64 & Templates Seguros:** Manifestos de Secret em `k8s/02-secrets.yaml` padronizados com `data:` em Base64 e fornecimento de template `02-secrets.yaml.template` para integração em produção com Bitnami Sealed Secrets ou HashiCorp Vault.
 - **Integridade de Base de Dados (Flyway):** Configuração uniforme de `ddl-auto: validate` em todos os microsserviços com PostgreSQL, garantindo que o Flyway é a única autoridade de migração de schema.
 - **Auditoria DevSecOps com Trivy Pinned:** O pipeline CI corre com versão imutável do scanner (`aquasecurity/trivy-action@0.28.0`) com `exit-code: 1` em vulnerabilidades críticas.
 - **Gestão de Segredos:** Templates de configuração declarativa (`k8s/02-secrets.yaml.template` e `.env.example`) orientados a ambientes GitOps e Sealed Secrets.
@@ -332,7 +338,7 @@ A plataforma dispõe de interfaces completas validadas com dados realistas. A do
 | **Service Registry Eureka** | [![Eureka](docs/screenshots/09_eureka_registry.png)](docs/SCREENSHOTS.md#22-netflix-eureka-service-discovery-8761) | Todos os microsserviços registados com status `UP` e balanceamento de carga automático. |
 | **Prometheus Targets** | [![Prometheus](docs/screenshots/10_prometheus_targets.png)](docs/SCREENSHOTS.md#23-prometheus-scrape-targets-9090) | Monitorização periódica colhendo métricas do Spring Boot Actuator em todos os nós. |
 | **Filas do RabbitMQ** | [![RabbitMQ](docs/screenshots/12_rabbitmq_overview.png)](docs/SCREENSHOTS.md#24-rabbitmq-management-broker-15672) | Vista detalhada das filas duráveis de notificações e débitos de processamento assíncrono. |
-| **Suíte de Testes (104 Testes)** | [![Testes](docs/screenshots/13_automated_tests_reactor.png)](docs/SCREENSHOTS.md#31-execu%C3%A7%C3%A3o-da-su%C3%ADte-completa-de-testes-maven-reactor-104-testes) | Execução automatizada completa no Maven Reactor com 100% de aprovação (104/104). |
+| **Suíte de Testes (110 Testes)** | [![Testes](docs/screenshots/13_automated_tests_reactor.png)](docs/SCREENSHOTS.md#31-execu%C3%A7%C3%A3o-da-su%C3%ADte-completa-de-testes-maven-reactor-110-testes) | Execução automatizada completa no Maven Reactor com 100% de aprovação (110/110). |
 | **DevSecOps & Kubernetes** | [![K8s](docs/screenshots/14_k8s_kustomize_devsecops.png)](docs/SCREENSHOTS.md#33-valida%C3%A7%C3%A3o-de-kubernetes-kustomize--auditoria-devsecops-trivy) | Síntese de 30 recursos K8s declarativos e auditoria de segurança Trivy (0 falhas críticas). |
 
 ---
@@ -471,7 +477,7 @@ Para efeitos de validação do sistema distribuído, a base de dados é iniciali
 
 ## 🔬 10. Suíte de Testes Automatizados (JUnit 5 + Mockito)
 
-A integridade das regras de negócio distribuídas, dos padrões de resiliência e dos contratos de integração é garantida por uma suíte robusta de **104 testes unitários e de integração automatizados**, executados via Maven e validados no pipeline de Integração Contínua (CI):
+A integridade das regras de negócio distribuídas, dos padrões de resiliência e dos contratos de integração é garantida por uma suíte robusta de **110 testes unitários e de integração automatizados**, executados via Maven e validados no pipeline de Integração Contínua (CI):
 
 ```bash
 mvn test
@@ -485,21 +491,21 @@ mvn test
 [INFO] ------------------------------------------------------------------------
 [INFO] Reactor Summary for Car Pooling Platform 1.0.0:
 [INFO] 
-[INFO] Car Pooling Platform ............................... SUCCESS [  0.042 s]
-[INFO] Common Library ..................................... SUCCESS [  2.366 s]
-[INFO] Eureka Server ...................................... SUCCESS [  1.697 s]
-[INFO] API Gateway ........................................ SUCCESS [  2.992 s]
-[INFO] Auth Service ....................................... SUCCESS [  2.493 s]
-[INFO] Trip Service ....................................... SUCCESS [  3.278 s]
-[INFO] vehicle-service .................................... SUCCESS [  2.364 s]
-[INFO] payment-service .................................... SUCCESS [  2.134 s]
-[INFO] location-service ................................... SUCCESS [  1.258 s]
-[INFO] Notification Service ............................... SUCCESS [  2.412 s]
-[INFO] Admin Service ...................................... SUCCESS [  2.246 s]
-[INFO] Frontend Service ................................... SUCCESS [  2.039 s]
+[INFO] Car Pooling Platform ............................... SUCCESS [  0.025 s]
+[INFO] Common Library ..................................... SUCCESS [  1.924 s]
+[INFO] Eureka Server ...................................... SUCCESS [  1.635 s]
+[INFO] API Gateway ........................................ SUCCESS [  2.988 s]
+[INFO] Auth Service ....................................... SUCCESS [  2.124 s]
+[INFO] Trip Service ....................................... SUCCESS [  8.008 s]
+[INFO] vehicle-service .................................... SUCCESS [  1.910 s]
+[INFO] payment-service .................................... SUCCESS [  2.130 s]
+[INFO] location-service ................................... SUCCESS [  1.106 s]
+[INFO] Notification Service ............................... SUCCESS [  2.421 s]
+[INFO] Admin Service ...................................... SUCCESS [  2.473 s]
+[INFO] Frontend Service ................................... SUCCESS [  2.268 s]
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
-[INFO] Total time:  25.938 s
+[INFO] Total time:  29.455 s
 [INFO] ------------------------------------------------------------------------
 ```
 
@@ -513,14 +519,14 @@ mvn test
 | **`eureka-server`** | `EurekaServerApplicationTest` | **1** | 0 | 0 | 0.046s | Sanity check e integridade do arranque do servidor de descoberta Netflix Eureka. |
 | **`api-gateway`** | `JwtAuthenticationFilterTest`<br>`RateLimiterConfigTest` | **11** | 0 | 0 | 1.457s | Validação reativa de JWT na borda; RBAC com bloqueio 403 em `/api/admin/**`; sanitização de headers `X-User-*`; Redis Token Bucket e proteção anti-spoofing de IP. |
 | **`auth-service`** | `AuthServiceTest` | **10** | 0 | 0 | 1.495s | Autenticação JWT; encriptação BCrypt; proteção contra enumeração de utilizadores no login; restrição estrita de privilégios no auto-registo. |
-| **`trip-service`** | `TripServiceTest`<br>`OutboxServiceTest`<br>`OutboxPublisherTest` | **14** | 0 | 0 | 2.064s | Divisão de despesas por ocupante; reservas e cancelamentos; cálculo de CO2; persistência Outbox (`PENDING`); publicação RabbitMQ (`SENT`) e retries. |
+| **`trip-service`** | `TripServiceTest`<br>`OutboxServiceTest`<br>`OutboxPublisherTest`<br>`ReservationOutboxFlowIntegrationTest` | **20** | 0 | 0 | 5.442s | Proteção IDOR em confirmações/cancelamentos; concorrência com `SKIP LOCKED` (`FOR UPDATE SKIP LOCKED`); publisher confirms; testes de integração JPA com persistência real do fluxo reserva -> outbox -> rabbitmq. |
 | **`vehicle-service`** | `VehicleServiceTest` | **8** | 0 | 0 | 1.003s | Veículos 100% elétricos (0g CO2); consumos médios; cálculo combinado de aluguer (horas + km); isolamento de frota por condutor. |
 | **`payment-service`** | `PaymentServiceTest` | **8** | 0 | 0 | 1.011s | Liquidação MBWay (`MBWAY-XXXX`) e Cartão (`CARD-XXXX`); reembolsos (`REFUNDED`); pagamentos falhados (`FAILED`); somatório de receita. |
 | **`location-service`** | `LocationServiceTest` | **10** | 0 | 0 | 0.144s | Haversine geodésico; tempo de condução; catálogo de cidades PT; rotas Faro-Lisboa (A2), Braga-Porto (Norte); estimativas de portagens. |
 | **`notification-service`** | `RabbitMQConfigTest`<br>`NotificationConsumerTest`<br>`NotificationServiceTest` | **19** | 0 | 0 | 1.499s | Dead Letter Exchange (`carpooling.dlx`) e DLQ (`notification.dlq`); consumo e roteamento de eventos; marcação em lote e consultas de não lidas. |
 | **`admin-service`** | `AdminServiceTest` | **6** | 0 | 0 | 1.103s | Agregação de sustentabilidade ($CO_2/22$ árvores); bloqueio/desbloqueio com registo de auditoria não-falsificável e delegação Feign. |
 | **`frontend-service`** | `NotificationServiceTest` | **4** | 0 | 0 | 0.971s | Tratamento contra NPEs; resiliência de WebClient reativo com valores nulos; builders de NotificationDTO. |
-| **Total Global** | **18 Suítes em 11 Módulos** | **104** | **0** | **0** | **9.94s** | **Taxa de Aprovação: 100% (`BUILD SUCCESS`)** |
+| **Total Global** | **19 Suítes em 11 Módulos** | **110** | **0** | **0** | **13.32s** | **Taxa de Aprovação: 100% (`BUILD SUCCESS`)** |
 
 ### ☸️ Validação de Infraestrutura Kubernetes (`k8s/`) & DevSecOps
 

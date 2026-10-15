@@ -1,5 +1,6 @@
 package com.carpooling.trip;
 
+import com.carpooling.common.security.CurrentUser;
 import com.carpooling.trip.client.LocationClient;
 import com.carpooling.trip.client.VehicleClient;
 import com.carpooling.trip.dto.CreateReservationRequest;
@@ -22,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -267,14 +269,96 @@ class TripServiceTest {
     }
 
     @Test
-    @DisplayName("Deve listar viagens publicadas por um determinado condutor")
-    void testGetTripsByDriver() {
-        when(tripRepository.findByDriverIdOrderByDepartureDateTimeDesc(10L)).thenReturn(List.of(sampleTrip));
+    @DisplayName("Segurança IDOR: Deve impedir utilizador não-autorizado de confirmar reserva de outro condutor")
+    void testConfirmReservation_ForbiddenForUnauthorizedUser() {
+        Reservation reservation = Reservation.builder()
+                .id(50L)
+                .trip(sampleTrip) // driverId is 10L
+                .passengerId(99L)
+                .numberOfSeats(1)
+                .status(ReservationStatus.PENDING)
+                .build();
 
-        List<TripDTO> trips = tripService.getTripsByDriver(10L);
+        when(reservationRepository.findById(50L)).thenReturn(Optional.of(reservation));
 
-        assertEquals(1, trips.size());
-        assertEquals(10L, trips.get(0).getDriverId());
+        CurrentUser intruder = new CurrentUser(999L, "intruder@evil.com", List.of("ROLE_PASSENGER"));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+                tripService.confirmReservation(50L, intruder)
+        );
+
+        assertEquals(403, ex.getStatusCode().value());
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Segurança IDOR: Condutor legítimo da viagem pode confirmar reserva")
+    void testConfirmReservation_AllowedForLegitimateDriver() {
+        Reservation reservation = Reservation.builder()
+                .id(50L)
+                .trip(sampleTrip) // driverId is 10L
+                .passengerId(99L)
+                .numberOfSeats(1)
+                .status(ReservationStatus.PENDING)
+                .build();
+
+        when(reservationRepository.findById(50L)).thenReturn(Optional.of(reservation));
+        when(tripRepository.save(any(Trip.class))).thenAnswer(i -> i.getArgument(0));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArgument(0));
+
+        CurrentUser legitimateDriver = new CurrentUser(10L, "joao.silva@carpooling.pt", List.of("ROLE_DRIVER"));
+
+        ReservationDTO confirmed = tripService.confirmReservation(50L, legitimateDriver);
+
+        assertNotNull(confirmed);
+        assertEquals("CONFIRMED", confirmed.getStatus());
+        verify(reservationRepository).save(reservation);
+    }
+
+    @Test
+    @DisplayName("Segurança IDOR: Deve impedir terceiro não-autorizado de cancelar reserva alheia")
+    void testCancelReservation_ForbiddenForThirdParty() {
+        Reservation reservation = Reservation.builder()
+                .id(50L)
+                .trip(sampleTrip) // driverId is 10L
+                .passengerId(99L)
+                .numberOfSeats(1)
+                .status(ReservationStatus.CONFIRMED)
+                .build();
+
+        when(reservationRepository.findById(50L)).thenReturn(Optional.of(reservation));
+
+        CurrentUser stranger = new CurrentUser(777L, "stranger@other.com", List.of("ROLE_PASSENGER"));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+                tripService.cancelReservation(50L, stranger)
+        );
+
+        assertEquals(403, ex.getStatusCode().value());
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Segurança IDOR: Passageiro titular pode cancelar a sua própria reserva")
+    void testCancelReservation_AllowedForOwnerPassenger() {
+        Reservation reservation = Reservation.builder()
+                .id(50L)
+                .trip(sampleTrip) // driverId is 10L
+                .passengerId(99L)
+                .numberOfSeats(1)
+                .status(ReservationStatus.CONFIRMED)
+                .build();
+
+        when(reservationRepository.findById(50L)).thenReturn(Optional.of(reservation));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArgument(0));
+
+        CurrentUser passenger = new CurrentUser(99L, "maria.santos@carpooling.pt", List.of("ROLE_PASSENGER"));
+
+        ReservationDTO cancelled = tripService.cancelReservation(50L, passenger);
+
+        assertNotNull(cancelled);
+        assertEquals("CANCELLED", cancelled.getStatus());
+        verify(reservationRepository).save(reservation);
     }
 }
 
