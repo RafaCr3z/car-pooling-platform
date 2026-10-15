@@ -113,7 +113,7 @@ Visão consolidada das 19 suítes JUnit 5 cobrindo Testes de Integração JPA (F
 ---
 
 ### 3.3 Validação de Kubernetes (Kustomize) & Auditoria DevSecOps (Trivy)
-Síntese dos 30 recursos declarativos K8s (Eureka em cluster, segredos padronizados em Base64 e template para Sealed Secrets) e verificação estrita de segurança DevSecOps (Trivy @0.28.0 com exit-code: 1 em CRITICAL).
+Síntese dos 30 recursos declarativos K8s (Eureka em cluster, segredos padronizados em Base64 e template para Sealed Secrets) e verificação estrita de segurança DevSecOps (Trivy @v0.28.0 com exit-code: 1 em CRITICAL).
 
 ![Validação K8s e DevSecOps](screenshots/14_k8s_kustomize_devsecops.png)
 

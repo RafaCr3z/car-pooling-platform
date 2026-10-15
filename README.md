@@ -288,7 +288,7 @@ A plataforma implementa uma postura de segurança Zero-Trust na borda com autent
 - **Service Discovery Nativo no Cluster:** Inclusão do `eureka-server` como Deployment e Service no namespace `carpooling`, permitindo resolução de rotas `lb://` no API Gateway através de injeção automática de `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE`.
 - **Segredos Codificados em Base64 & Templates Seguros:** Manifestos de Secret em `k8s/02-secrets.yaml` padronizados com `data:` em Base64 e fornecimento de template `02-secrets.yaml.template` para integração em produção com Bitnami Sealed Secrets ou HashiCorp Vault.
 - **Integridade de Base de Dados (Flyway):** Configuração uniforme de `ddl-auto: validate` em todos os microsserviços com PostgreSQL, garantindo que o Flyway é a única autoridade de migração de schema.
-- **Auditoria DevSecOps com Trivy Pinned:** O pipeline CI corre com versão imutável do scanner (`aquasecurity/trivy-action@0.28.0`) com `exit-code: 1` em vulnerabilidades críticas.
+- **Auditoria DevSecOps com Trivy Pinned:** O pipeline CI corre com versão imutável do scanner (`aquasecurity/trivy-action@v0.28.0`) com `exit-code: 1` em vulnerabilidades críticas.
 - **Gestão de Segredos:** Templates de configuração declarativa (`k8s/02-secrets.yaml.template` e `.env.example`) orientados a ambientes GitOps e Sealed Secrets.
 
 ---
@@ -539,7 +539,7 @@ kubectl kustomize k8s/
 ```
 - **Total de Recursos Validados:** 30 objetos K8s (1 Namespace, 1 ConfigMap, 1 Secret, 13 Deployments com Probes e Limits, 13 Services e 1 Ingress).
 - **Service Discovery Unificado:** Eureka Service Registry integrado no cluster K8s (`k8s/03-infrastructure.yaml`), viabilizando a resolução dinâmica de rotas `lb://` no API Gateway.
-- **Auditoria DevSecOps:** Verificação estrita com **Trivy** versão fixada `aquasecurity/trivy-action@0.28.0` configurado com `exit-code: 1` em vulnerabilidades críticas.
+- **Auditoria DevSecOps:** Verificação estrita com **Trivy** versão fixada `aquasecurity/trivy-action@v0.28.0` configurado com `exit-code: 1` em vulnerabilidades críticas.
 - **Gestão Segura de Credenciais (Estratégia CI vs. Produção):** O manifesto `k8s/02-secrets.yaml` mantém exclusivamente valores *dummy* em Base64 para garantir a execução com sucesso da validação sintática `kubectl kustomize k8s/` no GitHub Actions CI e localmente. Em produção, os segredos reais são geridos de forma segura fora do Git através do template `k8s/02-secrets.yaml.template` e `.env.example`, recorrendo a **Bitnami Sealed Secrets**, **HashiCorp Vault** ou injeção dinâmica via pipeline de CI/CD.
 
 ---
