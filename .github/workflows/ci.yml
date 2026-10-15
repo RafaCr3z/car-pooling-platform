@@ -42,3 +42,4 @@ jobs:
           format: 'table'
           severity: 'CRITICAL'
           exit-code: '1'
+          trivyignores: '.trivyignore'
