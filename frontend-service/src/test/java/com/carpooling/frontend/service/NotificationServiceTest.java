@@ -36,4 +36,28 @@ class NotificationServiceTest {
         long count = notificationService.getUnreadCount(null, "token-xyz");
         assertEquals(0, count);
     }
+
+    @Test
+    @DisplayName("Deve validar a construção correta do NotificationDTO")
+    void testNotificationDTO_BuilderAndValues() {
+        NotificationDTO dto = NotificationDTO.builder()
+                .id(1L)
+                .title("Viagem confirmada")
+                .message("O seu lugar está reservado")
+                .type("RESERVATION_CONFIRMED")
+                .isRead(false)
+                .build();
+
+        assertNotNull(dto);
+        assertEquals(1L, dto.getId());
+        assertEquals("Viagem confirmada", dto.getTitle());
+        assertFalse(dto.getIsRead());
+    }
+
+    @Test
+    @DisplayName("Deve garantir que a classe de serviço de notificações é instanciada")
+    void testServiceNotNull() {
+        assertNotNull(notificationService);
+    }
 }
+

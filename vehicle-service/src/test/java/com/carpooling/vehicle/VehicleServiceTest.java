@@ -116,4 +116,54 @@ class VehicleServiceTest {
         assertEquals(VehicleStatus.MAINTENANCE, v.getStatus());
         verify(vehicleRepository).save(v);
     }
+
+    @Test
+    @DisplayName("Deve obter dados de um veículo por ID")
+    void testGetVehicleById_Success() {
+        Vehicle v = Vehicle.builder().id(1L).brand("Peugeot").model("208").status(VehicleStatus.AVAILABLE).build();
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(v));
+
+        VehicleDTO result = vehicleService.getVehicleById(1L);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("Peugeot", result.getBrand());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao consultar veículo inexistente")
+    void testGetVehicleById_NotFound() {
+        when(vehicleRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> vehicleService.getVehicleById(99L));
+    }
+
+    @Test
+    @DisplayName("Deve remover veículo da base de dados")
+    void testDeleteVehicle() {
+        doNothing().when(vehicleRepository).deleteById(1L);
+
+        vehicleService.deleteVehicle(1L);
+
+        verify(vehicleRepository).deleteById(1L);
+    }
+
+    @Test
+    @DisplayName("Deve calcular custo de aluguer combinado por horas e quilómetros")
+    void testCalculateRentalCost() {
+        Vehicle v = Vehicle.builder()
+                .id(1L)
+                .pricePerHour(new BigDecimal("5.00"))
+                .pricePerKm(new BigDecimal("0.20"))
+                .status(VehicleStatus.AVAILABLE)
+                .build();
+
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(v));
+
+        // 3 horas * 5.00 = 15.00; 100 km * 0.20 = 20.00; total = 35.00
+        BigDecimal cost = vehicleService.calculateRentalCost(1L, 3, 100);
+
+        assertEquals(new BigDecimal("35.00"), cost);
+    }
 }
+

@@ -25,6 +25,7 @@ import org.springframework.amqp.core.AmqpTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -223,5 +224,58 @@ class TripServiceTest {
         verify(tripRepository).save(sampleTrip);
         verify(reservationRepository).save(reservation);
     }
+
+    @Test
+    @DisplayName("Deve concluir viagem com estado COMPLETED e calcular emissões de CO2 poupadas")
+    void testUpdateTripStatus_Completed() {
+        sampleTrip.setOccupiedSeats(2);
+        when(tripRepository.findById(1L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.save(any(Trip.class))).thenAnswer(i -> i.getArgument(0));
+
+        TripDTO completed = tripService.updateTripStatus(1L, "COMPLETED");
+
+        assertNotNull(completed);
+        assertEquals("COMPLETED", completed.getStatus());
+        // 225km * 0.115 * 2 = 51.75 -> 51.8 kg
+        assertTrue(completed.getCo2SavedKg() > 50.0);
+        verify(tripRepository).save(sampleTrip);
+        verify(outboxService).saveEvent(eq("TRIP"), eq(1L), eq("COMPLETED"), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("Deve cancelar viagem e publicar evento na Outbox")
+    void testUpdateTripStatus_Cancelled() {
+        when(tripRepository.findById(1L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.save(any(Trip.class))).thenAnswer(i -> i.getArgument(0));
+
+        TripDTO cancelled = tripService.updateTripStatus(1L, "CANCELLED");
+
+        assertNotNull(cancelled);
+        assertEquals("CANCELLED", cancelled.getStatus());
+        verify(outboxService).saveEvent(eq("TRIP"), eq(1L), eq("CANCELLED"), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("Deve listar viagens disponíveis com lugares vagos")
+    void testGetAvailableTrips() {
+        when(tripRepository.findAvailableTrips()).thenReturn(List.of(sampleTrip));
+
+        List<TripDTO> trips = tripService.getAvailableTrips();
+
+        assertEquals(1, trips.size());
+        assertEquals("Castelo Branco", trips.get(0).getDepartureLocation());
+    }
+
+    @Test
+    @DisplayName("Deve listar viagens publicadas por um determinado condutor")
+    void testGetTripsByDriver() {
+        when(tripRepository.findByDriverIdOrderByDepartureDateTimeDesc(10L)).thenReturn(List.of(sampleTrip));
+
+        List<TripDTO> trips = tripService.getTripsByDriver(10L);
+
+        assertEquals(1, trips.size());
+        assertEquals(10L, trips.get(0).getDriverId());
+    }
 }
+
 

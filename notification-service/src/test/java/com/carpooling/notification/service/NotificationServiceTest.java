@@ -108,4 +108,26 @@ class NotificationServiceTest {
         assertTrue(n2.getIsRead());
         verify(notificationRepository).saveAll(List.of(n1, n2));
     }
+
+    @Test
+    @DisplayName("Deve lidar com lista vazia ao marcar todas como lidas sem lançar erro")
+    void testMarkAllAsRead_Empty() {
+        when(notificationRepository.findByUserIdAndIsReadFalse(10L)).thenReturn(List.of());
+
+        notificationService.markAllAsRead(10L);
+
+        verify(notificationRepository).saveAll(List.of());
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando utilizador não tem notificações não lidas")
+    void testGetUnreadNotifications_Empty() {
+        when(notificationRepository.findByUserIdAndIsReadFalse(10L)).thenReturn(List.of());
+
+        List<Notification> result = notificationService.getUnreadNotifications(10L);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
 }
+

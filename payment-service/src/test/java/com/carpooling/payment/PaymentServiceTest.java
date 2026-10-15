@@ -112,4 +112,56 @@ class PaymentServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> paymentService.getPaymentById(999L));
         assertTrue(ex.getMessage().contains("não encontrado"));
     }
+
+    @Test
+    @DisplayName("Deve reembolsar pagamento e atualizar estado para REFUNDED")
+    void testRefundPayment() {
+        Payment p = Payment.builder().id(10L).status(PaymentStatus.COMPLETED).build();
+        when(paymentRepository.findById(10L)).thenReturn(Optional.of(p));
+
+        paymentService.refundPayment(10L);
+
+        assertEquals(PaymentStatus.REFUNDED, p.getStatus());
+        verify(paymentRepository).save(p);
+    }
+
+    @Test
+    @DisplayName("Deve marcar pagamento com estado FAILED em caso de recusa")
+    void testFailPayment() {
+        Payment p = Payment.builder().id(11L).status(PaymentStatus.PENDING).build();
+        when(paymentRepository.findById(11L)).thenReturn(Optional.of(p));
+
+        paymentService.failPayment(11L);
+
+        assertEquals(PaymentStatus.FAILED, p.getStatus());
+        verify(paymentRepository).save(p);
+    }
+
+    @Test
+    @DisplayName("Deve listar histórico de pagamentos de um passageiro")
+    void testGetPaymentsByPassengerId() {
+        Payment p1 = Payment.builder().id(1L).passengerId(20L).amount(new BigDecimal("10.00")).status(PaymentStatus.COMPLETED).build();
+        Payment p2 = Payment.builder().id(2L).passengerId(20L).amount(new BigDecimal("15.00")).status(PaymentStatus.COMPLETED).build();
+
+        when(paymentRepository.findByPassengerId(20L)).thenReturn(java.util.List.of(p1, p2));
+
+        java.util.List<PaymentDTO> result = paymentService.getPaymentsByPassengerId(20L);
+
+        assertEquals(2, result.size());
+        assertEquals(new BigDecimal("10.00"), result.get(0).getAmount());
+    }
+
+    @Test
+    @DisplayName("Deve somar valor total transacionado de pagamentos concluídos")
+    void testGetTotalTransactedAmount() {
+        Payment p1 = Payment.builder().amount(new BigDecimal("25.00")).status(PaymentStatus.COMPLETED).build();
+        Payment p2 = Payment.builder().amount(new BigDecimal("35.50")).status(PaymentStatus.COMPLETED).build();
+
+        when(paymentRepository.findByStatus(PaymentStatus.COMPLETED)).thenReturn(java.util.List.of(p1, p2));
+
+        BigDecimal total = paymentService.getTotalTransactedAmount();
+
+        assertEquals(new BigDecimal("60.50"), total);
+    }
 }
+

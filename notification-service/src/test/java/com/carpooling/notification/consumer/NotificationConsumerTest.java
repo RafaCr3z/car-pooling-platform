@@ -153,4 +153,31 @@ class NotificationConsumerTest {
         assertEquals("RESERVATION_REJECTED", saved.getType());
         assertTrue(saved.getMessage().contains("não pôde ser aceite"));
     }
+
+    @Test
+    @DisplayName("Deve ignorar eventos TripEvent do tipo CREATED sem emitir notificação")
+    void testHandleTripEvent_Created_DoesNotPersist() {
+        TripEvent event = TripEvent.builder()
+                .eventType(TripEvent.EventType.CREATED)
+                .tripId(103L)
+                .build();
+
+        notificationConsumer.handleTripEvent(event);
+
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve ignorar eventos ReservationEvent do tipo CANCELLED sem persistir")
+    void testHandleReservationEvent_Cancelled_DoesNotPersist() {
+        ReservationEvent event = ReservationEvent.builder()
+                .eventType(ReservationEvent.EventType.CANCELLED)
+                .reservationId(55L)
+                .build();
+
+        notificationConsumer.handleReservationEvent(event);
+
+        verify(notificationRepository, never()).save(any());
+    }
 }
+

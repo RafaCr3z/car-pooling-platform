@@ -157,4 +157,93 @@ class AuthServiceTest {
         assertEquals(2, target.getRatingCount());
         verify(userRepository).save(target);
     }
+
+    @Test
+    @DisplayName("Deve registar com sucesso um passageiro comum")
+    void testRegister_Success_Passenger() {
+        RegisterRequest req = new RegisterRequest();
+        req.setEmail("novo.passageiro@carpooling.pt");
+        req.setPassword("segredo123");
+        req.setFullName("Novo Passageiro");
+        req.setPhoneNumber("933333333");
+        req.setRole("PASSENGER");
+
+        when(userRepository.existsByEmail(req.getEmail())).thenReturn(false);
+        when(passwordEncoder.encode("segredo123")).thenReturn("hashed_pass");
+        when(userRepository.save(any(User.class))).thenAnswer(i -> {
+            User u = i.getArgument(0);
+            u.setId(10L);
+            return u;
+        });
+
+        UserDTO created = authService.register(req);
+
+        assertNotNull(created);
+        assertEquals(10L, created.getId());
+        assertEquals("novo.passageiro@carpooling.pt", created.getEmail());
+        assertEquals("PASSENGER", created.getRole());
+        assertTrue(created.getIsActive());
+        assertFalse(created.getIsBlocked());
+    }
+
+    @Test
+    @DisplayName("Deve registar utilizador com múltiplos papéis quando selecionado AMBOS")
+    void testRegister_Success_BothRoles() {
+        RegisterRequest req = new RegisterRequest();
+        req.setEmail("hibrido@carpooling.pt");
+        req.setPassword("pass123");
+        req.setFullName("Condutor e Passageiro");
+        req.setRole("AMBOS");
+
+        when(userRepository.existsByEmail(req.getEmail())).thenReturn(false);
+        when(passwordEncoder.encode(any())).thenReturn("hashed_pass");
+        when(userRepository.save(any(User.class))).thenAnswer(i -> {
+            User u = i.getArgument(0);
+            u.setId(11L);
+            return u;
+        });
+
+        UserDTO created = authService.register(req);
+
+        assertNotNull(created);
+        assertEquals(2, created.getRoles().size());
+        assertTrue(created.getRoles().contains("DRIVER"));
+        assertTrue(created.getRoles().contains("PASSENGER"));
+    }
+
+    @Test
+    @DisplayName("Deve obter perfil de utilizador por ID")
+    void testGetUserById_Success() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        UserDTO dto = authService.getUserById(1L);
+
+        assertNotNull(dto);
+        assertEquals(1L, dto.getId());
+        assertEquals("joao.silva@carpooling.pt", dto.getEmail());
+    }
+
+    @Test
+    @DisplayName("Deve desativar conta de utilizador")
+    void testDeactivateUser() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        authService.deactivateUser(1L);
+
+        assertFalse(sampleUser.getIsActive());
+        verify(userRepository).save(sampleUser);
+    }
+
+    @Test
+    @DisplayName("Deve alterar estado de bloqueio de utilizador")
+    void testSetBlockedStatus() {
+        sampleUser.setIsBlocked(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        authService.setBlockedStatus(1L, false);
+
+        assertFalse(sampleUser.getIsBlocked());
+        verify(userRepository).save(sampleUser);
+    }
 }
+

@@ -89,4 +89,59 @@ class AdminServiceTest {
                 log.getDetails().contains("Comportamento inadequado")
         ));
     }
+
+    @Test
+    @DisplayName("Deve desbloquear utilizador e registar ação de auditoria USER_UNBLOCKED")
+    void testUnblockUser_CreatesAuditLog() {
+        when(authServiceClient.unblockUser(5L)).thenReturn(Map.of("status", "success", "message", "Utilizador desbloqueado"));
+        when(adminLogRepository.save(any(AdminLog.class))).thenAnswer(i -> i.getArgument(0));
+
+        Map<String, Object> result = adminService.unblockUser("admin_gestor", 5L);
+
+        assertNotNull(result);
+        assertEquals("success", result.get("status"));
+        verify(authServiceClient).unblockUser(5L);
+        verify(adminLogRepository).save(argThat(log ->
+                "admin_gestor".equals(log.getAdminUsername()) &&
+                "USER_UNBLOCKED".equals(log.getAction())
+        ));
+    }
+
+    @Test
+    @DisplayName("Deve obter histórico de logs recentes de administração")
+    void testGetRecentLogs() {
+        AdminLog log1 = AdminLog.builder().id(1L).action("USER_BLOCKED").adminUsername("admin").build();
+        when(adminLogRepository.findTop50ByOrderByTimestampDesc()).thenReturn(List.of(log1));
+
+        List<AdminLog> logs = adminService.getRecentLogs();
+
+        assertEquals(1, logs.size());
+        assertEquals("USER_BLOCKED", logs.get(0).getAction());
+        verify(adminLogRepository).findTop50ByOrderByTimestampDesc();
+    }
+
+    @Test
+    @DisplayName("Deve delegar listagem de todos os utilizadores ao AuthServiceClient")
+    void testGetAllUsers() {
+        UserSummaryDTO u = UserSummaryDTO.builder().id(1L).email("user@test.pt").build();
+        when(authServiceClient.getAllUsers()).thenReturn(List.of(u));
+
+        List<UserSummaryDTO> users = adminService.getAllUsers();
+
+        assertEquals(1, users.size());
+        assertEquals("user@test.pt", users.get(0).getEmail());
+    }
+
+    @Test
+    @DisplayName("Deve delegar listagem de todas as viagens ao TripServiceClient")
+    void testGetAllTrips() {
+        TripResponseDTO t = TripResponseDTO.builder().id(100L).status("OPEN").build();
+        when(tripServiceClient.getAllTrips()).thenReturn(List.of(t));
+
+        List<TripResponseDTO> trips = adminService.getAllTrips();
+
+        assertEquals(1, trips.size());
+        assertEquals(100L, trips.get(0).getId());
+    }
 }
+

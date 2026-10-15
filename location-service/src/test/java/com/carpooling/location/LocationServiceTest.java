@@ -75,4 +75,49 @@ class LocationServiceTest {
         assertNotNull(cities);
         assertTrue(cities.size() >= 15, "Catálogo deve conter pelo menos 15 cidades portuguesas");
     }
+
+    @Test
+    @DisplayName("Deve retornar zero para distância entre as mesmas coordenadas")
+    void testCalculateDistance_ZeroSameCoordinates() {
+        Double distance = locationService.calculateDistance(
+                BigDecimal.valueOf(39.8222), BigDecimal.valueOf(-7.4909),
+                BigDecimal.valueOf(39.8222), BigDecimal.valueOf(-7.4909)
+        );
+        assertEquals(0.0, distance, 0.001);
+    }
+
+    @Test
+    @DisplayName("Deve retornar Optional vazio para cidade inexistente no catálogo")
+    void testFindCity_NotFound() {
+        Optional<LocationService.CityLocation> city = locationService.findCity("Cidade Inexistente");
+        assertFalse(city.isPresent());
+    }
+
+    @Test
+    @DisplayName("Deve calcular rota entre Faro e Lisboa (Corredor A2)")
+    void testCalculateRoute_FaroToLisboa() {
+        Map<String, Object> route = locationService.calculateRouteBetweenCities("Faro", "Lisboa");
+        assertNotNull(route);
+        assertEquals("Faro", route.get("origin"));
+        assertEquals("Lisboa", route.get("destination"));
+        assertTrue(((Number) route.get("distanceKm")).doubleValue() > 240.0);
+    }
+
+    @Test
+    @DisplayName("Deve calcular rota entre Braga e Porto (Corredor Norte)")
+    void testCalculateRoute_BragaToPorto() {
+        Map<String, Object> route = locationService.calculateRouteBetweenCities("Braga", "Porto");
+        assertNotNull(route);
+        assertEquals("Braga", route.get("origin"));
+        assertEquals("Porto", route.get("destination"));
+        assertTrue(((Number) route.get("distanceKm")).doubleValue() > 40.0);
+    }
+
+    @Test
+    @DisplayName("Deve estimar zero minutos para distância nula ou zero")
+    void testEstimateTravelTime_ZeroDistance() {
+        Long minutes = locationService.estimateTravelTime(0.0);
+        assertEquals(0L, minutes);
+    }
 }
+

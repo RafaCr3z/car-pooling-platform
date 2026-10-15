@@ -14,7 +14,7 @@
 [![Tempo](https://img.shields.io/badge/Grafana%20Tempo-Distributed%20Tracing%203200-F46800.svg)](https://grafana.com/oss/tempo/)
 [![Loki](https://img.shields.io/badge/Grafana%20Loki-Centralized%20Logs%203100-F46800.svg)](https://grafana.com/oss/loki/)
 [![Grafana](https://img.shields.io/badge/Grafana-Observability%203001-F46800.svg)](https://grafana.com/)
-[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(51)-25A162.svg)](https://junit.org/junit5/)
+[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(91)-25A162.svg)](https://junit.org/junit5/)
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-yellow.svg)](https://resilience4j.readme.io/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-18%20Containers-2496ED.svg)](https://www.docker.com/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-K8s%20Manifests-326CE5.svg)](https://kubernetes.io/)
@@ -312,7 +312,7 @@ A plataforma dispõe de interfaces completas validadas com dados realistas. A do
 | **Service Registry Eureka** | [![Eureka](docs/screenshots/09_eureka_registry.png)](docs/SCREENSHOTS.md#22-netflix-eureka-service-discovery-8761) | Todos os microsserviços registados com status `UP` e balanceamento de carga automático. |
 | **Prometheus Targets** | [![Prometheus](docs/screenshots/10_prometheus_targets.png)](docs/SCREENSHOTS.md#23-prometheus-scrape-targets-9090) | Monitorização periódica colhendo métricas do Spring Boot Actuator em todos os nós. |
 | **Filas do RabbitMQ** | [![RabbitMQ](docs/screenshots/12_rabbitmq_overview.png)](docs/SCREENSHOTS.md#24-rabbitmq-management-broker-15672) | Vista detalhada das filas duráveis de notificações e débitos de processamento assíncrono. |
-| **Suíte de Testes (51 Testes)** | [![Testes](docs/screenshots/13_automated_tests_reactor.png)](docs/SCREENSHOTS.md#31-execu%C3%A7%C3%A3o-da-su%C3%ADte-completa-de-testes-maven-reactor-51-testes) | Execução automatizada completa no Maven Reactor com 100% de aprovação (51/51). |
+| **Suíte de Testes (91 Testes)** | [![Testes](docs/screenshots/13_automated_tests_reactor.png)](docs/SCREENSHOTS.md#31-execu%C3%A7%C3%A3o-da-su%C3%ADte-completa-de-testes-maven-reactor-91-testes) | Execução automatizada completa no Maven Reactor com 100% de aprovação (91/91). |
 | **DevSecOps & Kubernetes** | [![K8s](docs/screenshots/14_k8s_kustomize_devsecops.png)](docs/SCREENSHOTS.md#33-valida%C3%A7%C3%A3o-de-kubernetes-kustomize--auditoria-devsecops-trivy) | Síntese de 30 recursos K8s declarativos e auditoria de segurança Trivy (0 falhas críticas). |
 
 ---
@@ -451,7 +451,7 @@ Para efeitos de validação do sistema distribuído, a base de dados é iniciali
 
 ## 🔬 10. Suíte de Testes Automatizados (JUnit 5 + Mockito)
 
-A integridade das regras de negócio distribuídas, dos padrões de resiliência e dos contratos de integração é garantida por uma suíte robusta de **51 testes unitários e de integração automatizados**, executados via Maven e validados no pipeline de Integração Contínua (CI):
+A integridade das regras de negócio distribuídas, dos padrões de resiliência e dos contratos de integração é garantida por uma suíte robusta de **91 testes unitários e de integração automatizados**, executados via Maven e validados no pipeline de Integração Contínua (CI):
 
 ```bash
 mvn test
@@ -465,21 +465,21 @@ mvn test
 [INFO] ------------------------------------------------------------------------
 [INFO] Reactor Summary for Car Pooling Platform 1.0.0:
 [INFO] 
-[INFO] Car Pooling Platform ............................... SUCCESS [  0.023 s]
-[INFO] Common Library ..................................... SUCCESS [  1.172 s]
-[INFO] Eureka Server ...................................... SUCCESS [  1.924 s]
-[INFO] API Gateway ........................................ SUCCESS [  1.939 s]
-[INFO] Auth Service ....................................... SUCCESS [  2.572 s]
-[INFO] Trip Service ....................................... SUCCESS [  6.572 s]
-[INFO] vehicle-service .................................... SUCCESS [  2.140 s]
-[INFO] payment-service .................................... SUCCESS [  2.008 s]
-[INFO] location-service ................................... SUCCESS [  1.149 s]
-[INFO] Notification Service ............................... SUCCESS [  2.343 s]
-[INFO] Admin Service ...................................... SUCCESS [  2.234 s]
-[INFO] Frontend Service ................................... SUCCESS [  2.152 s]
+[INFO] Car Pooling Platform (Parent POM) ................ SUCCESS [  0.070 s]
+[INFO] Common Library (DTOs & AMQP Events) ............. SUCCESS [  3.471 s]
+[INFO] Eureka Server (Service Discovery) ................ SUCCESS [  1.938 s]
+[INFO] API Gateway (Spring Cloud + Redis RateLimiter) .. SUCCESS [  2.059 s]
+[INFO] Auth Service (JWT Authentication & RBAC) ......... SUCCESS [  2.496 s]
+[INFO] Trip Service (Transactional Outbox & Trips) ..... SUCCESS [  6.023 s]
+[INFO] vehicle-service (Fleet & Emissions) ............. SUCCESS [  3.459 s]
+[INFO] payment-service (MBWay & Cards) ................. SUCCESS [  3.446 s]
+[INFO] location-service (Routes & Redis Cache) ........ SUCCESS [  3.177 s]
+[INFO] Notification Service (RabbitMQ DLQ Consumer) .... SUCCESS [  4.224 s]
+[INFO] Admin Service (Sustainability & Audit Logs) ...... SUCCESS [  3.928 s]
+[INFO] Frontend Service (Web Client UI) ................ SUCCESS [  2.883 s]
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
-[INFO] Total time:  26.687 s
+[INFO] Total time:  37.818 s
 [INFO] ------------------------------------------------------------------------
 ```
 
@@ -489,17 +489,18 @@ mvn test
 
 | Módulo | Suíte de Testes (JUnit 5) | Qtd. | Falhas | Erros | Duração | Regras de Negócio & Cenários Cobertos |
 | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| **`eureka-server`** | `EurekaServerApplicationTest` | **1** | 0 | 0 | 0.070s | Sanity check e integridade do arranque do servidor de descoberta Netflix Eureka. |
-| **`api-gateway`** | `RateLimiterConfigTest` | **3** | 0 | 0 | 0.424s | Resolução de chave IP por `X-Forwarded-For`; extração do IP original em cadeias multi-proxy; fallback para `remoteAddress`. |
-| **`auth-service`** | `AuthServiceTest` | **5** | 0 | 0 | 1.343s | Autenticação JWT; rejeição de credenciais inválidas; suspensão administrativa; rejeição de email duplicado; cálculo ponderado de avaliações (1-5★). |
-| **`trip-service`** | `TripServiceTest`<br>`OutboxServiceTest`<br>`OutboxPublisherTest` | **10** | 0 | 0 | 1.771s | Divisão justa de despesas por ocupante; reserva com decremento de lugares; rejeição por lotação esgotada; cálculo de $CO_2$ poupado; rejeição e cancelamento com reposição de lugares; persistência na Outbox (`PENDING`); publicação no RabbitMQ (`SENT`); política de retry e estado `FAILED` pós 5 tentativas. |
-| **`vehicle-service`** | `VehicleServiceTest` | **4** | 0 | 0 | 0.980s | Aplicação de consumos e emissões padrão; suporte a veículos elétricos (consumo e emissão zero); isolamento de frota por condutor; atualização cadastral. |
-| **`payment-service`** | `PaymentServiceTest` | **4** | 0 | 0 | 1.012s | Geração e liquidação MBWay (`MBWAY-XXXX`); processamento de transações por Cartão (`CARD-XXXX`); busca de transação por UUID; tratamento de exceções. |
-| **`location-service`** | `LocationServiceTest` | **5** | 0 | 0 | 0.126s | Fórmula geodésica Haversine e conversão rodoviária; estimativa de tempo de condução; catálogo e geocodificação de cidades portuguesas; cálculo de portagens. |
-| **`notification-service`** | `RabbitMQConfigTest`<br>`NotificationConsumerTest`<br>`NotificationServiceTest` | **15** | 0 | 0 | 1.215s | Declaração do Dead Letter Exchange (`carpooling.dlx`) e Dead Letter Queue (`notification.dlq`); consumo e roteamento de `TripEvent` (STARTED, COMPLETED) e `ReservationEvent` (REQUESTED, CONFIRMED, REJECTED); consulta, contagem e marcação de notificações lidas em lote. |
-| **`admin-service`** | `AdminServiceTest` | **2** | 0 | 0 | 1.094s | Agregação de métricas de sustentabilidade e fórmula de árvores salvas ($CO_2 / 22$); moderação com bloqueio de utilizador e persistência de log de auditoria. |
-| **`frontend-service`** | `NotificationServiceTest` | **2** | 0 | 0 | 0.992s | Prevenção de NPEs e tratamento resiliente de entradas nulas na comunicação WebClient com o gateway. |
-| **Total Global** | **14 Suítes em 10 Módulos** | **51** | **0** | **0** | **10.03s** | **Taxa de Aprovação: 100% (`BUILD SUCCESS`)** |
+| **`common-lib`** | `ApiResponseTest`<br>`EventModelTest` | **6** | 0 | 0 | 0.118s | Estrutura unificada de resposta REST, contratos de eventos AMQP (`TripEvent`, `ReservationEvent`, `PaymentEvent`). |
+| **`eureka-server`** | `EurekaServerApplicationTest` | **1** | 0 | 0 | 0.046s | Sanity check e integridade do arranque do servidor de descoberta Netflix Eureka. |
+| **`api-gateway`** | `RateLimiterConfigTest` | **5** | 0 | 0 | 0.503s | Redis Token Bucket; extração de IP por `X-Forwarded-For`; multi-proxy chain; suporte a localhost e fallback `unknown-client`. |
+| **`auth-service`** | `AuthServiceTest` | **10** | 0 | 0 | 1.219s | Autenticação JWT; encriptação BCrypt; múltiplos papéis (AMBOS); bloqueio administrativo; suspensão de contas e médias 1-5★. |
+| **`trip-service`** | `TripServiceTest`<br>`OutboxServiceTest`<br>`OutboxPublisherTest` | **14** | 0 | 0 | 2.064s | Divisão justa de despesas por ocupante; reservas, cancelamentos com reposição de lugares; cálculo de CO2; persistência Outbox (`PENDING`); publicação RabbitMQ (`SENT`); retries e transição para `FAILED`. |
+| **`vehicle-service`** | `VehicleServiceTest` | **8** | 0 | 0 | 1.003s | Veículos 100% elétricos (0g CO2); consumos médios; cálculo combinado de aluguer (horas + km); isolamento de frota por condutor. |
+| **`payment-service`** | `PaymentServiceTest` | **8** | 0 | 0 | 1.406s | Liquidação MBWay (`MBWAY-XXXX`) e Cartão (`CARD-XXXX`); reembolsos (`REFUNDED`); pagamentos falhados (`FAILED`); somatório de receita. |
+| **`location-service`** | `LocationServiceTest` | **10** | 0 | 0 | 0.199s | Haversine geodésico; tempo de condução; catálogo de cidades PT; rotas Faro-Lisboa (A2), Braga-Porto (Norte); estimativas de portagens. |
+| **`notification-service`** | `RabbitMQConfigTest`<br>`NotificationConsumerTest`<br>`NotificationServiceTest` | **19** | 0 | 0 | 1.326s | Dead Letter Exchange (`carpooling.dlx`) e DLQ (`notification.dlq`); consumo e roteamento de `TripEvent` e `ReservationEvent`; eventos ignorados; consulta, contagem e marcação em lote. |
+| **`admin-service`** | `AdminServiceTest` | **6** | 0 | 0 | 1.004s | Agregação de métricas de sustentabilidade ($CO_2/22$ árvores); bloqueio e desbloqueio com registo de auditoria; delegação Feign. |
+| **`frontend-service`** | `NotificationServiceTest` | **4** | 0 | 0 | 0.843s | Tratamento contra NPEs; resiliência de WebClient reativo com valores nulos; builders de NotificationDTO. |
+| **Total Global** | **16 Suítes em 11 Módulos** | **91** | **0** | **0** | **11.23s** | **Taxa de Aprovação: 100% (`BUILD SUCCESS`)** |
 
 ### ☸️ Validação de Infraestrutura Kubernetes (`k8s/`) & DevSecOps
 

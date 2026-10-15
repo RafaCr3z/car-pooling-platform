@@ -53,4 +53,29 @@ class RateLimiterConfigTest {
                 .expectNext("192.168.1.50")
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("Deve retornar fallback 'unknown-client' quando não existir header nem remoteAddress")
+    void testResolveFallbackWhenNoHeadersOrAddress() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/trips").build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        StepVerifier.create(resolver.resolve(exchange))
+                .expectNext("unknown-client")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Deve resolver IP local 127.0.0.1 corretamente")
+    void testResolveLocalhostAddress() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/trips")
+                .remoteAddress(new InetSocketAddress("127.0.0.1", 8080))
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        StepVerifier.create(resolver.resolve(exchange))
+                .expectNext("127.0.0.1")
+                .verifyComplete();
+    }
 }
+
