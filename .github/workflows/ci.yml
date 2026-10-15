@@ -22,7 +22,7 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run Automated Tests & Integration Suite (110 Tests)
+      - name: Run Automated Tests & Integration Suite (121 Tests)
         run: mvn -B test --file pom.xml
 
       - name: Build & Package Microservices with Maven
@@ -35,7 +35,7 @@ jobs:
         run: kubectl kustomize k8s/
 
       - name: Run Trivy Vulnerability Scanner (DevSecOps)
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           ignore-unfixed: true
