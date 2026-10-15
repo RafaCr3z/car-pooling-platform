@@ -28,8 +28,9 @@ public class AuthService {
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
+        // Mesma mensagem para email inexistente e password errada: evita enumeracao de utilizadores.
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Utilizador não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Credenciais inválidas"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Credenciais inválidas");
@@ -63,18 +64,18 @@ public class AuthService {
             throw new RuntimeException("Email já registado");
         }
 
+        // Seguranca: o registo publico so pode atribuir papeis de utilizador final.
+        // ADMIN / FLEET_MANAGER nunca podem ser auto-atribuidos (evita escalada de privilegios).
         Set<UserRole> roles = new HashSet<>();
         if (request.getRole() != null) {
             String roleUpper = request.getRole().toUpperCase().trim();
             if (roleUpper.contains("BOTH") || roleUpper.contains("AMBOS")) {
                 roles.add(UserRole.PASSENGER);
                 roles.add(UserRole.DRIVER);
+            } else if (roleUpper.equals(UserRole.DRIVER.name())) {
+                roles.add(UserRole.DRIVER);
             } else {
-                try {
-                    roles.add(UserRole.valueOf(roleUpper));
-                } catch (IllegalArgumentException e) {
-                    roles.add(UserRole.PASSENGER);
-                }
+                roles.add(UserRole.PASSENGER);
             }
         } else {
             roles.add(UserRole.PASSENGER);

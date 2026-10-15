@@ -29,15 +29,29 @@ class RateLimiterConfigTest {
     }
 
     @Test
-    @DisplayName("Deve extrair o primeiro IP quando existirem múltiplos proxies no X-Forwarded-For")
-    void testResolveFirstIpFromMultipleProxies() {
+    @DisplayName("Deve extrair o último IP confiável quando existirem múltiplos proxies no X-Forwarded-For (evitando spoofing)")
+    void testResolveTrustedIpFromMultipleProxies() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/api/trips")
                 .header("X-Forwarded-For", "198.51.100.10, 10.0.0.1, 172.16.0.2")
                 .build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
         StepVerifier.create(resolver.resolve(exchange))
-                .expectNext("198.51.100.10")
+                .expectNext("172.16.0.2")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Deve priorizar X-Real-IP quando fornecido pelo Ingress")
+    void testResolveIpFromXRealIp() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/trips")
+                .header("X-Real-IP", "203.0.113.88")
+                .header("X-Forwarded-For", "198.51.100.10, 10.0.0.1")
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        StepVerifier.create(resolver.resolve(exchange))
+                .expectNext("203.0.113.88")
                 .verifyComplete();
     }
 

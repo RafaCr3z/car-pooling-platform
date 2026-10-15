@@ -24,6 +24,9 @@ springdoc:
     config:
       enabled: false
 
+jwt:
+  secret: ${JWT_SECRET:MyVeryLongSecretKeyFor256BitHS256AlgorithmThatIsAtLeast32Characters}
+
 server:
   port: 8085
 

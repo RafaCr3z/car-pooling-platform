@@ -98,7 +98,7 @@ Visão global da Topic Exchange `carpooling.topic`, das filas duráveis de event
 
 ## 🔬 3. Qualidade de Software, Testes Automatizados & Cloud Native
 
-### 3.1 Execução da Suíte Completa de Testes Maven Reactor (91 Testes)
+### 3.1 Execução da Suíte Completa de Testes Maven Reactor (104 Testes)
 Execução automatizada de testes unitários e de integração em todos os 11 módulos com 100% de aprovação (`BUILD SUCCESS`).
 
 ![Execução dos Testes Automatizados](screenshots/13_automated_tests_reactor.png)
@@ -106,14 +106,14 @@ Execução automatizada de testes unitários e de integração em todos os 11 m�
 ---
 
 ### 3.2 Quadro de Cobertura Global de Testes por Microsserviço
-Visão consolidada das 16 suítes JUnit 5 cobrindo Outbox Pattern, RabbitMQ DLQ, Redis Rate Limiting, autenticação JWT, modelos DTO/eventos e regras de sustentabilidade.
+Visão consolidada das 19 suítes JUnit 5 cobrindo Zero-Trust Gateway JWT Auth, RBAC Admin, proteção RGPD (PiiMasker), Transactional Outbox, RabbitMQ DLQ, Redis Rate Limiting e sustentabilidade.
 
 ![Quadro de Cobertura Global](screenshots/15_test_coverage_breakdown.png)
 
 ---
 
 ### 3.3 Validação de Kubernetes (Kustomize) & Auditoria DevSecOps (Trivy)
-Síntese dos 30 recursos declarativos K8s e verificação de segurança das imagens e dependências sem vulnerabilidades críticas.
+Síntese dos 30 recursos declarativos K8s (incluindo Eureka Discovery em cluster e secrets externalizados) e verificação estrita de segurança DevSecOps (Trivy @0.28.0 com exit-code: 1 em CRITICAL).
 
 ![Validação K8s e DevSecOps](screenshots/14_k8s_kustomize_devsecops.png)
 

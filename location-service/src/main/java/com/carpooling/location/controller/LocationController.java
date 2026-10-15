@@ -15,7 +15,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/locations")
 @AllArgsConstructor
-@CrossOrigin(origins = "*")
 public class LocationController {
     
     private final LocationService locationService;

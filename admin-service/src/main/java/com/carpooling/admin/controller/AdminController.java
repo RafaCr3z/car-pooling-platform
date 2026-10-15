@@ -5,6 +5,7 @@ import com.carpooling.admin.dto.TripResponseDTO;
 import com.carpooling.admin.entity.AdminLog;
 import com.carpooling.admin.service.AdminService;
 import com.carpooling.common.dto.UserSummaryDTO;
+import com.carpooling.common.privacy.PiiMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -12,12 +13,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*")
 public class AdminController {
 
     private final AdminService adminService;
@@ -29,13 +30,19 @@ public class AdminController {
 
     @GetMapping("/users")
     public ResponseEntity<List<UserSummaryDTO>> getAllUsers() {
-        return ResponseEntity.ok(adminService.getAllUsers());
+        // Conformidade com RGPD (Minimização de Dados - Artigo 5.º, n.º 1, alínea c do RGPD):
+        // Listagens administrativas nunca devem expor emails e telefones completos em texto limpo.
+        List<UserSummaryDTO> users = adminService.getAllUsers();
+        List<UserSummaryDTO> maskedUsers = users.stream()
+                .map(PiiMasker::mask)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(maskedUsers);
     }
 
     @PutMapping("/users/{userId}/block")
     public ResponseEntity<Map<String, Object>> blockUser(
             @PathVariable Long userId,
-            @RequestParam(required = false, defaultValue = "admin") String adminUsername,
+            @RequestHeader(value = "X-User-Email", required = false, defaultValue = "admin@carpooling.pt") String adminUsername,
             @RequestBody(required = false) Map<String, String> body) {
         String reason = body != null ? body.get("reason") : "Conduta inapropriada";
         return ResponseEntity.ok(adminService.blockUser(adminUsername, userId, reason));
@@ -44,7 +51,7 @@ public class AdminController {
     @PutMapping("/users/{userId}/unblock")
     public ResponseEntity<Map<String, Object>> unblockUser(
             @PathVariable Long userId,
-            @RequestParam(required = false, defaultValue = "admin") String adminUsername) {
+            @RequestHeader(value = "X-User-Email", required = false, defaultValue = "admin@carpooling.pt") String adminUsername) {
         return ResponseEntity.ok(adminService.unblockUser(adminUsername, userId));
     }
 
@@ -56,7 +63,7 @@ public class AdminController {
     @PutMapping("/trips/{tripId}/cancel")
     public ResponseEntity<TripResponseDTO> cancelTrip(
             @PathVariable Long tripId,
-            @RequestParam(required = false, defaultValue = "admin") String adminUsername,
+            @RequestHeader(value = "X-User-Email", required = false, defaultValue = "admin@carpooling.pt") String adminUsername,
             @RequestBody(required = false) Map<String, String> body) {
         String reason = body != null ? body.get("reason") : "Intervenção administrativa";
         return ResponseEntity.ok(adminService.cancelTrip(adminUsername, tripId, reason));

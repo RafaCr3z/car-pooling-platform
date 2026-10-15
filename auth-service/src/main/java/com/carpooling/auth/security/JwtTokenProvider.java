@@ -1,9 +1,9 @@
 package com.carpooling.auth.security;
 
 import com.carpooling.auth.entity.User;
+import com.carpooling.common.security.JwtSupport;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -13,18 +13,24 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Emissor de JWT (HS256).
+ *
+ * <p>O segredo vem obrigatoriamente da variavel de ambiente {@code JWT_SECRET}
+ * (sem valor por defeito no codigo). O algoritmo e fixado explicitamente em HS256
+ * para ser identico ao que o gateway e os restantes servicos aceitam.</p>
+ */
 @Component
 @Slf4j
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:MyVeryLongSecretKeyFor256BitHS256AlgorithmThatIsAtLeast32Characters}")
-    private String jwtSecret;
+    private final SecretKey signingKey;
+    private final long jwtExpirationMs;
 
-    @Value("${jwt.expiration:86400000}")
-    private long jwtExpirationMs;
-
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    public JwtTokenProvider(@Value("${jwt.secret}") String jwtSecret,
+                            @Value("${jwt.expiration:3600000}") long jwtExpirationMs) {
+        this.signingKey = JwtSupport.hmacKey(jwtSecret);
+        this.jwtExpirationMs = jwtExpirationMs;
     }
 
     public String generateToken(User user) {
@@ -34,27 +40,18 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(user.getEmail())
-                .claim("userId", user.getId())
+                .claim(JwtSupport.USER_ID_CLAIM, user.getId())
                 .claim("fullName", user.getFullName())
-                .claim("roles", roleNames)
+                .claim(JwtSupport.ROLES_CLAIM, roleNames)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(getSigningKey())
-                .compact();
-    }
-
-    public String generateToken(String email) {
-        return Jwts.builder()
-                .subject(email)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(getSigningKey())
+                .signWith(signingKey, Jwts.SIG.HS256)
                 .compact();
     }
 
     public Claims getClaims(String token) {
         return Jwts.parser()
-                .verifyWith(getSigningKey())
+                .verifyWith(signingKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -65,7 +62,7 @@ public class JwtTokenProvider {
     }
 
     public Long getUserIdFromToken(String token) {
-        Object val = getClaims(token).get("userId");
+        Object val = getClaims(token).get(JwtSupport.USER_ID_CLAIM);
         if (val instanceof Number) {
             return ((Number) val).longValue();
         }
@@ -74,13 +71,10 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(getSigningKey())
-                    .build()
-                    .parseSignedClaims(token);
+            getClaims(token);
             return true;
         } catch (Exception e) {
-            log.error("Token validation failed: {}", e.getMessage());
+            log.warn("Token validation failed: {}", e.getMessage());
             return false;
         }
     }

@@ -34,6 +34,9 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+jwt:
+  secret: ${JWT_SECRET:MyVeryLongSecretKeyFor256BitHS256AlgorithmThatIsAtLeast32Characters}
+
 server:
   port: 8086
 

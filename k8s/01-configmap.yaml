@@ -13,3 +13,5 @@ data:
   POSTGRES_HOST: "postgres"
   POSTGRES_PORT: "5432"
   POSTGRES_USER: "carpooling"
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server:8761/eureka/"
+  EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"

@@ -17,6 +17,12 @@
     <description>Location and Route Calculation Service for Car Pooling Platform</description>
 
     <dependencies>
+        <!-- Validacao de JWT (OAuth2 Resource Server, HS256) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+
         <!-- Project Dependencies -->
         <dependency>
             <groupId>com.carpooling</groupId>

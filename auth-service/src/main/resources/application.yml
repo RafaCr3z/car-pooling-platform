@@ -9,13 +9,13 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
   datasource:
-    url: jdbc:postgresql://localhost:5432/carpooling_auth
-    username: carpooling
-    password: carpooling123
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/carpooling_auth}
+    username: ${SPRING_DATASOURCE_USERNAME:carpooling}
+    password: ${SPRING_DATASOURCE_PASSWORD:carpooling123}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -26,11 +26,11 @@ server:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
 
 jwt:
-  secret: MyVeryLongSecretKeyFor256BitHS256AlgorithmThatIsAtLeast32Characters
-  expiration: 86400000
+  secret: ${JWT_SECRET:MyVeryLongSecretKeyFor256BitHS256AlgorithmThatIsAtLeast32Characters}
+  expiration: ${JWT_EXPIRATION_MS:86400000}
 
 springdoc:
   api-docs:

@@ -1,22 +1,42 @@
 package com.carpooling.trip.config;
 
+import com.carpooling.common.security.BearerTokenRelayInterceptor;
+import com.carpooling.common.security.JwtSupport;
+import com.carpooling.common.security.ServiceSecurity;
+import feign.RequestInterceptor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
+
+    @Value("${jwt.secret:MyVeryLongSecretKeyFor256BitHS256AlgorithmThatIsAtLeast32Characters}")
+    private String jwtSecret;
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return JwtSupport.servletDecoder(jwtSecret);
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            );
-        return http.build();
+        return ServiceSecurity.build(http, jwtDecoder(), auth -> auth
+                .requestMatchers(HttpMethod.GET, "/api/trips", "/api/trips/search", "/api/trips/available", "/api/trips/{id}").permitAll()
+                .anyRequest().authenticated()
+        );
+    }
+
+    @Bean
+    public RequestInterceptor bearerTokenRelayInterceptor() {
+        return new BearerTokenRelayInterceptor();
     }
 }
