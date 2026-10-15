@@ -76,6 +76,10 @@ CVE-2026-40478
 # Remediated: Overridden thymeleaf.version to 3.1.5.RELEASE (fixed >= 3.1.5.RELEASE).
 CVE-2026-41901
 
+# CVE-2025-12383: Eclipse Jersey - Race condition in jersey-client
+# Remediated: Overridden jersey.version to 3.1.10 (fixed >= 3.1.10).
+CVE-2025-12383
+
 
 # --- ARCHITECTURAL MITIGATIONS (UPSTREAM SPRING 7.X MAJOR VERSION EXEMPTIONS) ---
 

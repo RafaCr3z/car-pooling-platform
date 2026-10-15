@@ -32,6 +32,7 @@
         <netty.version>4.1.139.Final</netty.version>
         <freemarker.version>2.3.35</freemarker.version>
         <thymeleaf.version>3.1.5.RELEASE</thymeleaf.version>
+        <jersey.version>3.1.10</jersey.version>
     </properties>
 
     <modules>
