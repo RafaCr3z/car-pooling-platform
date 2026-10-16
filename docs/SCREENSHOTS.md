@@ -98,7 +98,7 @@ Visão global da Topic Exchange `carpooling.topic`, das filas duráveis de event
 
 ## 🔬 3. Qualidade de Software, Testes Automatizados & Cloud Native
 
-### 3.1 Execução da Suíte Completa de Testes Maven Reactor (121 Testes)
+### 3.1 Execução da Suíte Completa de Testes Maven Reactor (123 Testes)
 Execução automatizada de testes unitários e de integração JPA em todos os 11 módulos com 100% de aprovação (`BUILD SUCCESS`, 0 falhas, 0 erros).
 
 ![Execução dos Testes Automatizados](screenshots/13_automated_tests_reactor.png)

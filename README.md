@@ -14,7 +14,7 @@
 [![Tempo](https://img.shields.io/badge/Grafana%20Tempo-Distributed%20Tracing%203200-F46800.svg)](https://grafana.com/oss/tempo/)
 [![Loki](https://img.shields.io/badge/Grafana%20Loki-Centralized%20Logs%203100-F46800.svg)](https://grafana.com/oss/loki/)
 [![Grafana](https://img.shields.io/badge/Grafana-Observability%203001-F46800.svg)](https://grafana.com/)
-[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(121)-25A162.svg)](https://junit.org/junit5/)
+[![JUnit 5](https://img.shields.io/badge/JUnit%205-Automated%20Tests%20(123)-25A162.svg)](https://junit.org/junit5/)
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-yellow.svg)](https://resilience4j.readme.io/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-18%20Containers-2496ED.svg)](https://www.docker.com/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-K8s%20Manifests-326CE5.svg)](https://kubernetes.io/)
@@ -338,7 +338,7 @@ A plataforma dispõe de interfaces completas validadas com dados realistas. A do
 | **Service Registry Eureka** | [![Eureka](docs/screenshots/09_eureka_registry.png)](docs/SCREENSHOTS.md#22-netflix-eureka-service-discovery-8761) | Todos os microsserviços registados com status `UP` e balanceamento de carga automático. |
 | **Prometheus Targets** | [![Prometheus](docs/screenshots/10_prometheus_targets.png)](docs/SCREENSHOTS.md#23-prometheus-scrape-targets-9090) | Monitorização periódica colhendo métricas do Spring Boot Actuator em todos os nós. |
 | **Filas do RabbitMQ** | [![RabbitMQ](docs/screenshots/12_rabbitmq_overview.png)](docs/SCREENSHOTS.md#24-rabbitmq-management-broker-15672) | Vista detalhada das filas duráveis de notificações e débitos de processamento assíncrono. |
-| **Suíte de Testes (121 Testes)** | [![Testes](docs/screenshots/13_automated_tests_reactor.png)](docs/SCREENSHOTS.md#31-execu%C3%A7%C3%A3o-da-su%C3%ADte-completa-de-testes-maven-reactor-121-testes) | Execução automatizada completa no Maven Reactor com 100% de aprovação (121/121). |
+| **Suíte de Testes (123 Testes)** | [![Testes](docs/screenshots/13_automated_tests_reactor.png)](docs/SCREENSHOTS.md#31-execu%C3%A7%C3%A3o-da-su%C3%ADte-completa-de-testes-maven-reactor-123-testes) | Execução automatizada completa no Maven Reactor com 100% de aprovação (123/123). |
 | **DevSecOps & Kubernetes** | [![K8s](docs/screenshots/14_k8s_kustomize_devsecops.png)](docs/SCREENSHOTS.md#33-valida%C3%A7%C3%A3o-de-kubernetes-kustomize--auditoria-devsecops-trivy) | Síntese de 30 recursos K8s declarativos e auditoria de segurança Trivy (0 falhas críticas). |
 
 ---
@@ -477,7 +477,7 @@ Para efeitos de validação do sistema distribuído, a base de dados é iniciali
 
 ## 🔬 10. Suíte de Testes Automatizados (JUnit 5 + Mockito)
 
-A integridade das regras de negócio distribuídas, dos padrões de resiliência e dos contratos de integração é garantida por uma suíte robusta de **121 testes unitários e de integração automatizados**, executados via Maven e validados no pipeline de Integração Contínua (CI):
+A integridade das regras de negócio distribuídas, dos padrões de resiliência e dos contratos de integração é garantida por uma suíte robusta de **123 testes unitários e de integração automatizados**, executados via Maven e validados no pipeline de Integração Contínua (CI):
 
 ```bash
 mvn test
@@ -519,14 +519,14 @@ mvn test
 | **`eureka-server`** | `EurekaServerApplicationTest` | **1** | 0 | 0 | 0.039s | Sanity check e integridade do arranque do servidor de descoberta Netflix Eureka. |
 | **`api-gateway`** | `JwtAuthenticationFilterTest`<br>`RateLimiterConfigTest` | **11** | 0 | 0 | 1.457s | Validação reativa de JWT na borda; RBAC com bloqueio 403 em `/api/admin/**`; sanitização de headers `X-User-*`; Redis Token Bucket e proteção anti-spoofing de IP. |
 | **`auth-service`** | `AuthServiceTest` | **10** | 0 | 0 | 1.054s | Autenticação JWT; encriptação BCrypt; proteção contra enumeração de utilizadores no login; restrição estrita de privilégios no auto-registo. |
-| **`trip-service`** | `TripServiceTest`<br>`OutboxServiceTest`<br>`OutboxPublisherTest`<br>`ReservationOutboxFlowIntegrationTest` | **20** | 0 | 0 | 5.442s | Proteção IDOR em confirmações/cancelamentos; concorrência com `SKIP LOCKED` (`FOR UPDATE SKIP LOCKED`); publisher confirms; testes de integração JPA do fluxo reserva -> outbox. |
+| **`trip-service`** | `TripServiceTest`<br>`OutboxServiceTest`<br>`OutboxPublisherTest`<br>`ReservationOutboxFlowIntegrationTest` | **21** | 0 | 0 | 5.442s | Lock pessimista de viagens (`PESSIMISTIC_WRITE`); proteção IDOR em confirmações/cancelamentos; concorrência com `SKIP LOCKED`; publisher confirms correlacionados com ACK/NACK; testes de integração JPA. |
 | **`vehicle-service`** | `VehicleServiceTest` | **8** | 0 | 0 | 0.876s | Veículos 100% elétricos (0g CO2); consumos médios; cálculo combinado de aluguer (horas + km); isolamento de frota por condutor. |
-| **`payment-service`** | `PaymentIdempotencyIntegrationTest`<br>`PaymentServiceTest` | **12** | 0 | 0 | 7.020s | Testes de integração JPA de idempotência (`transaction_id UNIQUE` anti-double spending); liquidações MBWay, Cartão e Wallet; reembolsos (`REFUNDED`). |
+| **`payment-service`** | `PaymentIdempotencyIntegrationTest`<br>`PaymentServiceTest` | **13** | 0 | 0 | 7.020s | Idempotência por reserva; testes de integração JPA (`transaction_id UNIQUE` anti-double spending); liquidações MBWay, Cartão e Wallet; reembolsos (`REFUNDED`). |
 | **`location-service`** | `LocationServiceTest` | **10** | 0 | 0 | 0.178s | Haversine geodésico; tempo de condução; catálogo de cidades PT; rotas Faro-Lisboa (A2), Braga-Porto (Norte); estimativas de portagens. |
 | **`notification-service`** | `RabbitMQConfigTest`<br>`NotificationConsumerTest`<br>`NotificationServiceTest` | **19** | 0 | 0 | 1.499s | Dead Letter Exchange (`carpooling.dlx`) e DLQ (`notification.dlq`); consumo e roteamento de eventos; marcação em lote e consultas de não lidas. |
 | **`admin-service`** | `AdminServiceTest` | **6** | 0 | 0 | 0.912s | Agregação de sustentabilidade ($CO_2/22$ árvores); bloqueio/desbloqueio com registo de auditoria não-falsificável e delegação Feign. |
 | **`frontend-service`** | `NotificationServiceTest` | **4** | 0 | 0 | 0.755s | WebClient com Netty timeouts (3s connect, 5s response); fallbacks resilientes; tratamento contra NPEs e DTOs partilhados. |
-| **Total Global** | **21 Suítes em 11 Módulos** | **121** | **0** | **0** | **21.50s** | **Taxa de Aprovação: 100% (`BUILD SUCCESS`)** |
+| **Total Global** | **21 Suítes em 11 Módulos** | **123** | **0** | **0** | **21.50s** | **Taxa de Aprovação: 100% (`BUILD SUCCESS`)** |
 
 ### ☸️ Validação de Infraestrutura Kubernetes (`k8s/`) & DevSecOps
 
