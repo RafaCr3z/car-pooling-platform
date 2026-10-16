@@ -16,7 +16,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("CarPooling PT — Enterprise Microservices Gateway API")
                         .version("1.0.0")
-                        .description("Catálogo Centralizado de APIs REST da Plataforma Distribuída de Car Pooling (EST-IPCB)")
+                        .description("Catálogo Centralizado de APIs REST da Plataforma Distribuída de Car Pooling")
                         .contact(new Contact().name("Rafael Cruz").email("rafael.cruz@ipcbcampus.pt"))
                         .license(new License().name("MIT License")));
     }

@@ -79,7 +79,7 @@ public class DataInitializer implements CommandLineRunner {
                 .password(passwordEncoder.encode("password123"))
                 .fullName("Maria Santos")
                 .phoneNumber("923456789")
-                .bio("Estudante no Politécnico de Castelo Branco (EST-IPCB).")
+                .bio("Passageira regular em viagens de Castelo Branco para Lisboa e Porto.")
                 .roles(Set.of(UserRole.PASSENGER))
                 .isActive(true)
                 .isBlocked(false)

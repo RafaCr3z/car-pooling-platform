@@ -1,7 +1,7 @@
 @echo off
 REM ==============================================================================
 REM Car Pooling Platform - Script de Inicialização Completa (Windows)
-REM Aplicações Distribuídas 2025/2026 - EST-IPCB
+REM Plataforma Distribuída Empresarial
 REM ==============================================================================
 
 cls

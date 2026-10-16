@@ -22,7 +22,7 @@
 [![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900.svg)](https://leafletjs.com/)
 [![CI Pipeline](https://github.com/RafaCr3z/car-pooling-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/RafaCr3z/car-pooling-platform/actions)
 
-Plataforma distribuída de car pooling desenvolvida no âmbito da unidade curricular de **Aplicações Distribuídas 2025/2026** da **Escola Superior de Tecnologia de Castelo Branco (EST-IPCB)** pelo aluno **Rafael Cruz**.
+Plataforma distribuída empresarial de car pooling e mobilidade sustentável desenvolvida como projeto pessoal por **Rafael Cruz**.
 
 O sistema implementa uma arquitetura orientada a microsserviços empresariais com comunicação síncrona resiliente (OpenFeign + Circuit Breakers Resilience4j), comunicação assíncrona orientada a eventos (RabbitMQ Topic Exchange), cache distribuído de alto desempenho (Redis 7 com padrão Cache-Aside), telemetria e observabilidade em tempo real (Prometheus e Grafana), isolamento estrito de dados por serviço (Database-per-Service no PostgreSQL), validação com suíte de testes unitários automatizados (JUnit 5 + Mockito) e interface responsiva com cartografia interativa (Leaflet.js e OpenStreetMap).
 
@@ -546,15 +546,7 @@ kubectl kustomize k8s/
 
 ## 👨‍💻 11. Identificação do Projeto & Autoria
 
-- **Instituição:** Instituto Politécnico de Castelo Branco — Escola Superior de Tecnologia (EST-IPCB)
-- **Curso:** Licenciatura em Engenharia Informática
-- **Unidade Curricular:** Aplicações Distribuídas
-- **Ano Letivo:** 2025 / 2026
+- **Projeto:** CarPooling PT — Plataforma Distribuída Empresarial de Car Pooling
 - **Autor:** Rafael Cruz (rafael.cruz@ipcbcampus.pt)
 - **Repositório Oficial:** [github.com/RafaCr3z/car-pooling-platform](https://github.com/RafaCr3z/car-pooling-platform)
 - **Licença:** MIT License
-
-### 🤖 Metodologia de Engenharia & Desenvolvimento Assistido por IA (AI-Assisted Engineering)
-No espírito de transparência e excelência técnica, este repositório utilizou **ferramentas modernas de inteligência artificial generativa como acelerador de produtividade (Pair Programming)** para geração de testes unitários massivos, prototipagem ágil e scaffolding de configurações de infraestrutura. 
-
-A arquitetura geral do sistema distribuído, a modelagem de domínio com isolamento de dados por serviço, a consistência eventual via Transactional Outbox, a topologia de mensageria assíncrona com RabbitMQ DLQ, as políticas de segurança Zero-Trust na borda do cluster, o cumprimento do RGPD e a orquestração em Kubernetes foram rigorosamente especificadas, auditadas e compreendidas pelo autor.
