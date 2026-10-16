@@ -444,7 +444,7 @@ Para efeitos de validação do sistema distribuído, a base de dados é iniciali
 | Papel | Email | Palavra-passe | Perfil Pré-Configurado |
 | :--- | :--- | :--- | :--- |
 | **Condutor** | `joao.silva@carpooling.pt` | `password123` | Condutor ativo com **Peugeot 208 PureTech** (5.2 L/100km). Avaliação 4.9★. |
-| **Passageira** | `maria.santos@carpooling.pt` | `password123` | Aluna do IPCB, procura viagens regulares. Avaliação 5.0★. |
+| **Passageira** | `maria.santos@carpooling.pt` | `password123` | Passageira frequente em viagens de Castelo Branco para Lisboa. Avaliação 5.0★. |
 | **Condutor 2** | `carlos.mendes@carpooling.pt` | `password123` | Condutor com **Renault Megane dCi** (4.8 L/100km). |
 | **Administrador**| `admin@carpooling.pt` | `admin123` | Acesso à console de métricas `/admin`. |
 
