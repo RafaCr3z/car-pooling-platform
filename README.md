@@ -22,9 +22,9 @@
 [![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900.svg)](https://leafletjs.com/)
 [![CI Pipeline](https://github.com/RafaCr3z/car-pooling-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/RafaCr3z/car-pooling-platform/actions)
 
-Plataforma distribuída empresarial de car pooling e mobilidade sustentável desenvolvida como projeto pessoal por **Rafael Cruz**.
+Plataforma distribuída de car pooling e mobilidade sustentável concebida como protótipo arquitetural avançado com recurso a padrões de microsserviços empresariais, desenvolvida como projeto pessoal por **Rafael Cruz**.
 
-O sistema implementa uma arquitetura orientada a microsserviços empresariais com comunicação síncrona resiliente (OpenFeign + Circuit Breakers Resilience4j), comunicação assíncrona orientada a eventos (RabbitMQ Topic Exchange), cache distribuído de alto desempenho (Redis 7 com padrão Cache-Aside), telemetria e observabilidade em tempo real (Prometheus e Grafana), isolamento estrito de dados por serviço (Database-per-Service no PostgreSQL), validação com suíte de testes unitários automatizados (JUnit 5 + Mockito) e interface responsiva com cartografia interativa (Leaflet.js e OpenStreetMap).
+O sistema implementa uma arquitetura orientada a microsserviços desacoplados e conteinerizados com comunicação síncrona resiliente (OpenFeign + Circuit Breakers Resilience4j), comunicação assíncrona orientada a eventos (RabbitMQ Topic Exchange), cache distribuído de alto desempenho (Redis 7 com padrão Cache-Aside), telemetria e observabilidade centralizada (stack LGTM: Prometheus, Grafana, Tempo e Loki), isolamento estrito de dados por serviço (Database-per-Service no PostgreSQL), validação com suíte de testes automatizados (123 testes JUnit 5 + Mockito) e interface responsiva com cartografia interativa (Leaflet.js e OpenStreetMap).
 
 ---
 
@@ -149,7 +149,7 @@ flowchart TD
 
 ## 🧩 3. Especificação Detalhada dos Microsserviços
 
-O sistema divide-se em **12 módulos independentes** geridos por um POM agregador pai:
+O repositório organiza-se em **11 módulos Maven** (1 biblioteca partilhada transversal `common-lib` + 10 microsserviços executáveis Spring Boot) geridos por um POM agregador pai:
 
 | Módulo | Porta | Base de Dados / Armazenamento | Responsabilidade de Domínio | Principais Endpoints REST |
 | :--- | :---: | :--- | :--- | :--- |
@@ -158,13 +158,23 @@ O sistema divide-se em **12 módulos independentes** geridos por um POM agregado
 | **`auth-service`** | `8081` | `carpooling_auth` (PostgreSQL) | Gestão de utilizadores, autenticação JWT, perfis, reputação e avaliações | `POST /api/auth/login`<br/>`POST /api/auth/register`<br/>`GET /api/users/{id}` |
 | **`trip-service`** | `8082` | `carpooling_trips` (PostgreSQL) | Gestão do ciclo de vida de viagens, reservas de lugares e cálculo de custos | `GET /api/trips`<br/>`POST /api/trips`<br/>`POST /api/trips/{id}/reservations` |
 | **`vehicle-service`** | `8083` | `carpooling_vehicles` (PostgreSQL) | Gestão da frota automóvel dos condutores, consumos e emissões de carbono | `GET /api/vehicles`<br/>`POST /api/vehicles`<br/>`GET /api/vehicles/driver/{id}` |
-| **`payment-service`** | `8084` | `carpooling_payments` (PostgreSQL) | Processamento e liquidação de pagamentos simulados (MBWay, Cartão, Wallet) | `POST /api/payments/process`<br/>`GET /api/payments/total`<br/>`GET /api/payments/trip/{id}` |
+| **`payment-service`** | `8084` | `carpooling_payments` (PostgreSQL) | Processamento e liquidação de pagamentos em modo sandbox simulado (MBWay, Cartão, Wallet com transações sintéticas; sem integração com gateway bancário real) | `POST /api/payments/process`<br/>`GET /api/payments/total`<br/>`GET /api/payments/trip/{id}` |
 | **`location-service`** | `8085` | `redis` (Cache Distribuído) | Catálogo geográfico de cidades PT, cálculo de distâncias Haversine e portagens | `GET /api/locations/cities`<br/>`GET /api/locations/route`<br/>`GET /api/locations/distance` |
 | **`notification-service`** | `8086` | `carpooling_notifications` (PostgreSQL) | Consumidor RabbitMQ, persistência de alertas e histórico de notificações | `GET /api/notifications/user/{id}`<br/>`PUT /api/notifications/{id}/read` |
 | **`admin-service`** | `8087` | `carpooling_admin` (PostgreSQL) | Agregação de métricas globais, moderação de utilizadores e auditoria | `GET /api/admin/metrics`<br/>`GET /api/admin/users`<br/>`PUT /api/admin/users/{id}/block` |
 | **`frontend-service`** | `3000` | Sessão Web (Spring MVC) | Interface de utilizador com Thymeleaf, Bootstrap 5 e Leaflet.js | `GET /`<br/>`GET /login`<br/>`GET /trips/search`<br/>`GET /admin` |
 | **`common-lib`** | — | — | Biblioteca transversal com DTOs partilhados e contratos de eventos AMQP | — |
-| **`prometheus / grafana`** | `9090` / `3001` | Time-Series Engine | Telemetria centralizada de latência, taxa de erros, JVM heap e threads | Actuator Scrapes & Dashboards |
+
+### Serviços de Infraestrutura e Observabilidade Conteinerizados
+
+Para além dos 11 módulos de aplicação, o ecossistema recorre a contentores de infraestrutura e telemetria:
+
+| Componente | Porta(s) | Papel Operacional | Descrição Técnica |
+| :--- | :---: | :--- | :--- |
+| **`PostgreSQL`** | `5432` | Persistência Relacional | Bases de dados relacionais dedicadas (*Database-per-Service*) com schema gerido via migrações Flyway. |
+| **`RabbitMQ`** | `5672` / `15672` | Mensageria Assíncrona | Broker AMQP com Topic Exchange (`carpooling.topic`) e Dead Letter Queue (`notification.dlq`). |
+| **`Redis`** | `6379` | Cache & Rate Limiting | Armazenamento em memória para Cache-Aside no `location-service` e Token Bucket no `api-gateway`. |
+| **`Stack LGTM`** | `9090` / `3001`<br/>`3200` / `3100` | Observabilidade Centralizada | Prometheus (métricas Actuator), Grafana (dashboards JVM), Tempo (tracing OTLP), Loki e Promtail (logs centralizados). |
 
 ---
 
@@ -285,10 +295,12 @@ A plataforma implementa uma postura de segurança Zero-Trust na borda com autent
    - Comunicações síncronas entre serviços propagam o token original via `BearerTokenRelayInterceptor` mantendo o contexto de segurança sem alterar threads do Circuit Breaker (`disable-thread-pool: true`).
 
 ### 4.11 Orquestração Kubernetes Cloud-Native & DevSecOps
-- **Service Discovery Nativo no Cluster:** Inclusão do `eureka-server` como Deployment e Service no namespace `carpooling`, permitindo resolução de rotas `lb://` no API Gateway através de injeção automática de `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE`.
-- **Segredos Codificados em Base64 & Templates Seguros:** Manifestos de Secret em `k8s/02-secrets.yaml` padronizados com `data:` em Base64 e fornecimento de template `02-secrets.yaml.template` para integração em produção com Bitnami Sealed Secrets ou HashiCorp Vault.
+- **Especificação Declarativa de Cluster:** Os manifestos em `k8s/` definem a topologia declarativa completa para Kubernetes (Deployments com *Probes* e limites de recursos, Services, ConfigMaps, Secrets, Ingress), com service discovery nativo e resolução de rotas no cluster. A especificação foi validada via Kustomize (`kubectl kustomize k8s/`) no CI e em ambiente local, servindo como modelo pronto para implantação em clusters geridos (como AKS, EKS ou Minikube/Kind), sem pressupor a existência de um cluster ativo de produção.
+- **Segredos Codificados em Base64 & Templates Seguros:** Manifestos de Secret em `k8s/02-secrets.yaml` padronizados com `data:` em Base64 (valores de demonstração para permitir a compilação sintática em CI) e fornecimento de template `02-secrets.yaml.template` para integração em produção com Bitnami Sealed Secrets ou HashiCorp Vault.
 - **Integridade de Base de Dados (Flyway):** Configuração uniforme de `ddl-auto: validate` em todos os microsserviços com PostgreSQL, garantindo que o Flyway é a única autoridade de migração de schema.
-- **Auditoria DevSecOps com Trivy Pinned:** O pipeline CI corre com versão imutável do scanner (`aquasecurity/trivy-action@v0.36.0`) com `exit-code: 1` em vulnerabilidades críticas.
+- **Auditoria DevSecOps com Trivy no Sistema de Ficheiros:** O pipeline CI executa o scanner imutável (`aquasecurity/trivy-action@v0.36.0`) em modo de sistema de ficheiros (`scan-type: 'fs'`) com severidade `CRITICAL` e `exit-code: '1'`. A aprovação sem vulnerabilidades críticas deve-se a:
+  1. Correção direta das dependências com patch disponível no `pom.xml` (ex.: Tomcat 10.1.61, PostgreSQL JDBC 42.7.14, Netty 4.1.139.Final, Bouncy Castle 1.86, Thymeleaf 3.1.5.RELEASE).
+  2. Documentação e justificação de CVEs transitivos upstream sem correção aplicável a esta versão principal no ledger `.trivyignore`, com as respetivas mitigações arquiteturais ativas (ex.: validação criptográfica de tokens JWT e RBAC na borda do API Gateway).
 - **Gestão de Segredos:** Templates de configuração declarativa (`k8s/02-secrets.yaml.template` e `.env.example`) orientados a ambientes GitOps e Sealed Secrets.
 
 ---
@@ -362,7 +374,7 @@ car-pooling-platform/
 ├── docker/                               # Ficheiros de provisionamento de métricas
 │   ├── prometheus/prometheus.yml         # Configuração de alvos de scrape do Actuator
 │   └── grafana/                          # Provisionamento automático de datasources e dashboards
-├── docker-compose.yml                    # Orquestração dos 15 contentores do ecossistema
+├── docker-compose.yml                    # Orquestração Docker Compose (18 contentores na stack completa; 15 no modo base)
 ├── db-init/                              # Scripts SQL de inicialização das bases de dados
 └── docs/                                 # Documentação complementar de screenshots e arquitetura
 ```
@@ -383,7 +395,12 @@ Na raiz do projeto:
 mvn clean test
 ```
 
-### 8.2 Inicialização do Ecossistema Completo (18 Contentores)
+### 8.2 Inicialização do Ecossistema Conteinerizado (15 a 18 Contentores)
+
+O ficheiro `docker-compose.yml` permite instanciar todo o sistema localmente através de dois modos operacionais:
+- **Modo Completo com Observabilidade LGTM (18 contentores):** Inicializa os 10 microsserviços Spring Boot, os 3 serviços essenciais de infraestrutura (PostgreSQL, RabbitMQ, Redis) e os 5 contentores de observabilidade unificada (Prometheus, Grafana, Tempo, Loki e Promtail).
+- **Modo Base (15 contentores):** Executa os 10 microsserviços, 3 serviços essenciais de dados e monitorização fundamental (Prometheus e Grafana), permitindo poupar recursos de memória RAM em ambientes locais que não necessitem de tracing distribuído OTLP ou agregação de logs Loki.
+
 Para construir as imagens e inicializar toda a infraestrutura em segundo plano:
 
 ```bash
@@ -413,13 +430,16 @@ docker compose up -d --build
 
 ### 8.4 Orquestração Cloud-Native com Kubernetes (K8s) & DevSecOps
 
-Para além do ambiente de desenvolvimento em Docker Compose, a plataforma inclui manifestos declarativos prontos para implantação em clusters de produção (AKS, EKS, GKE ou Minikube/Kind), eliminando a dependência do Eureka e recorrendo ao **Service Discovery nativo do Kubernetes (CoreDNS + Kube-Proxy)**:
+Para além do ambiente de desenvolvimento em Docker Compose, a plataforma inclui manifestos declarativos preparados para validação e implantação em clusters Kubernetes (tais como AKS, EKS, GKE ou Minikube/Kind), eliminando a dependência do Eureka em benefício do **Service Discovery nativo do Kubernetes (CoreDNS + Kube-Proxy)**:
+
+> [!NOTE]
+> **Validação Declarativa vs. Cluster em Execução:** O funcionamento e os fluxos da plataforma foram validados funcionalmente através do ambiente conteinerizado em Docker Compose. Os manifestos em `k8s/` constituem uma especificação declarativa completa e pronta para implantação, validada sintaticamente no GitHub Actions CI através de `kubectl kustomize k8s/` (não pressupondo um cluster ativo de produção em execução permanente).
 
 ```bash
 # Validação e visualização de todos os manifestos compilados (Kustomize)
 kubectl kustomize k8s/
 
-# Implantação completa da infraestrutura, bases de dados e microsserviços
+# Implantação completa da infraestrutura, bases de dados e microsserviços (em cluster K8s ativo)
 kubectl apply -k k8s/
 ```
 
@@ -532,15 +552,15 @@ mvn test
 
 ![Validação K8s e Scanner Trivy](docs/screenshots/14_k8s_kustomize_devsecops.png)
 
-Todos os manifestos foram sintetizados e validados com conformidade total contra o motor Kustomize:
+A especificação de recursos Kubernetes declarativos foi validada sintaticamente com recurso ao motor Kustomize:
 
 ```bash
 kubectl kustomize k8s/
 ```
-- **Total de Recursos Validados:** 30 objetos K8s (1 Namespace, 1 ConfigMap, 1 Secret, 13 Deployments com Probes e Limits, 13 Services e 1 Ingress).
-- **Service Discovery Unificado:** Eureka Service Registry integrado no cluster K8s (`k8s/03-infrastructure.yaml`), viabilizando a resolução dinâmica de rotas `lb://` no API Gateway.
-- **Auditoria DevSecOps:** Verificação estrita com **Trivy** versão fixada `aquasecurity/trivy-action@v0.36.0` configurado com `exit-code: 1` em vulnerabilidades críticas.
-- **Gestão Segura de Credenciais (Estratégia CI vs. Produção):** O manifesto `k8s/02-secrets.yaml` mantém exclusivamente valores *dummy* em Base64 para garantir a execução com sucesso da validação sintática `kubectl kustomize k8s/` no GitHub Actions CI e localmente. Em produção, os segredos reais são geridos de forma segura fora do Git através do template `k8s/02-secrets.yaml.template` e `.env.example`, recorrendo a **Bitnami Sealed Secrets**, **HashiCorp Vault** ou injeção dinâmica via pipeline de CI/CD.
+- **Total de Recursos Declarativos Validados:** 30 objetos K8s (1 Namespace, 1 ConfigMap, 1 Secret, 13 Deployments com Probes e Limits, 13 Services e 1 Ingress).
+- **Service Discovery Declarado:** Eureka Service Registry orquestrado no cluster K8s (`k8s/03-infrastructure.yaml`), viabilizando a resolução dinâmica de rotas `lb://` no API Gateway.
+- **Auditoria DevSecOps com Trivy (`scan-type: 'fs'`):** O pipeline de CI executa o scanner com versão fixada `aquasecurity/trivy-action@v0.36.0` sobre o sistema de ficheiros do projeto (código, dependências Maven e configurações), com severidade `CRITICAL` e `exit-code: 1`. A aprovação sem falhas críticas resulta da conjugação entre a atualização das dependências no `pom.xml` (ex.: Tomcat 10.1.61, PostgreSQL JDBC 42.7.14, Netty 4.1.139.Final) e a isenção documentada de CVEs transitivos sem patch upstream para Spring Boot 3 no ficheiro `.trivyignore`, com as correspondentes mitigações de perímetro e autenticação JWT ativas.
+- **Gestão Segura de Credenciais (Estratégia CI vs. Produção):** O manifesto `k8s/02-secrets.yaml` mantém exclusivamente valores de demonstração em Base64 para garantir a execução com sucesso da validação sintática `kubectl kustomize k8s/` no GitHub Actions CI e localmente. Em produção, os segredos reais são geridos de forma segura fora do Git através do template `k8s/02-secrets.yaml.template` e `.env.example`, recorrendo a **Bitnami Sealed Secrets**, **HashiCorp Vault** ou injeção dinâmica via pipeline de CI/CD.
 
 ---
 
