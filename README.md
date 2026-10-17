@@ -295,7 +295,7 @@ A plataforma implementa uma postura de segurança Zero-Trust na borda com autent
    - Comunicações síncronas entre serviços propagam o token original via `BearerTokenRelayInterceptor` mantendo o contexto de segurança sem alterar threads do Circuit Breaker (`disable-thread-pool: true`).
 
 ### 4.11 Orquestração Kubernetes Cloud-Native & DevSecOps
-- **Especificação Declarativa de Cluster:** Os manifestos em `k8s/` definem a topologia declarativa completa para Kubernetes (Deployments com *Probes* e limites de recursos, Services, ConfigMaps, Secrets, Ingress), com service discovery nativo e resolução de rotas no cluster. A especificação foi validada via Kustomize (`kubectl kustomize k8s/`) no CI e em ambiente local, servindo como modelo pronto para implantação em clusters geridos (como AKS, EKS ou Minikube/Kind), sem pressupor a existência de um cluster ativo de produção.
+- **Especificação Declarativa de Cluster:** Os manifestos em `k8s/` definem a topologia declarativa completa para Kubernetes (Deployments com *Probes* e limites de recursos, Services, ConfigMaps, Secrets, Ingress), integrando o **Eureka Service Registry (`eureka-server:8761` em `k8s/03-infrastructure.yaml`)** em conjunto com o DNS interno do cluster (`CoreDNS`) para resolução dinâmica de rotas `lb://` no API Gateway e OpenFeign. A especificação foi validada via Kustomize (`kubectl kustomize k8s/`) no CI e em ambiente local, servindo como modelo pronto para implantação em clusters geridos (como AKS, EKS ou Minikube/Kind), sem pressupor a existência de um cluster ativo de produção.
 - **Segredos Codificados em Base64 & Templates Seguros:** Manifestos de Secret em `k8s/02-secrets.yaml` padronizados com `data:` em Base64 (valores de demonstração para permitir a compilação sintática em CI) e fornecimento de template `02-secrets.yaml.template` para integração em produção com Bitnami Sealed Secrets ou HashiCorp Vault.
 - **Integridade de Base de Dados (Flyway):** Configuração uniforme de `ddl-auto: validate` em todos os microsserviços com PostgreSQL, garantindo que o Flyway é a única autoridade de migração de schema.
 - **Auditoria DevSecOps com Trivy no Sistema de Ficheiros:** O pipeline CI executa o scanner imutável (`aquasecurity/trivy-action@v0.36.0`) em modo de sistema de ficheiros (`scan-type: 'fs'`) com severidade `CRITICAL` e `exit-code: '1'`. A aprovação sem vulnerabilidades críticas deve-se a:
@@ -374,7 +374,7 @@ car-pooling-platform/
 ├── docker/                               # Ficheiros de provisionamento de métricas
 │   ├── prometheus/prometheus.yml         # Configuração de alvos de scrape do Actuator
 │   └── grafana/                          # Provisionamento automático de datasources e dashboards
-├── docker-compose.yml                    # Orquestração Docker Compose (18 contentores na stack completa; 15 no modo base)
+├── docker-compose.yml                    # Orquestração Docker Compose (18 serviços declarados)
 ├── db-init/                              # Scripts SQL de inicialização das bases de dados
 └── docs/                                 # Documentação complementar de screenshots e arquitetura
 ```
@@ -395,20 +395,21 @@ Na raiz do projeto:
 mvn clean test
 ```
 
-### 8.2 Inicialização do Ecossistema Conteinerizado (15 a 18 Contentores)
+### 8.2 Inicialização do Ecossistema Conteinerizado (18 Contentores por Omissão)
 
-O ficheiro `docker-compose.yml` permite instanciar todo o sistema localmente através de dois modos operacionais:
-- **Modo Completo com Observabilidade LGTM (18 contentores):** Inicializa os 10 microsserviços Spring Boot, os 3 serviços essenciais de infraestrutura (PostgreSQL, RabbitMQ, Redis) e os 5 contentores de observabilidade unificada (Prometheus, Grafana, Tempo, Loki e Promtail).
-- **Modo Base (15 contentores):** Executa os 10 microsserviços, 3 serviços essenciais de dados e monitorização fundamental (Prometheus e Grafana), permitindo poupar recursos de memória RAM em ambientes locais que não necessitem de tracing distribuído OTLP ou agregação de logs Loki.
-
-Para construir as imagens e inicializar toda a infraestrutura em segundo plano:
+O ficheiro `docker-compose.yml` declara os **18 serviços** que compõem a plataforma completa:
+- **Stack Completa LGTM (18 contentores — predefinição):** Inicializa os 10 microsserviços Spring Boot, os 3 serviços essenciais de infraestrutura (`postgres`, `rabbitmq`, `redis`) e os 5 contentores de observabilidade (`prometheus`, `grafana`, `tempo`, `loki` e `promtail`).
+- **Execução Reduzida sem Tracing/Logs (15 contentores — via `--scale`):** Para ambientes locais com restrições de memória RAM que apenas necessitem de métricas fundamentais (Prometheus + Grafana), é possível desativar os contentores `tempo`, `loki` e `promtail` na linha de comandos.
 
 ```bash
-# Compilar pacotes JAR
+# 1. Compilar pacotes JAR
 mvn package -DskipTests
 
-# Construir imagens e iniciar contentores
+# 2A. Iniciar a stack completa (18 contentores)
 docker compose up -d --build
+
+# 2B. Alternativa leve (15 contentores — sem Tempo, Loki e Promtail)
+docker compose up -d --build --scale tempo=0 --scale loki=0 --scale promtail=0
 ```
 
 *(No ambiente Windows, está igualmente disponível o ficheiro de automação `start.bat`).*
@@ -430,7 +431,7 @@ docker compose up -d --build
 
 ### 8.4 Orquestração Cloud-Native com Kubernetes (K8s) & DevSecOps
 
-Para além do ambiente de desenvolvimento em Docker Compose, a plataforma inclui manifestos declarativos preparados para validação e implantação em clusters Kubernetes (tais como AKS, EKS, GKE ou Minikube/Kind), eliminando a dependência do Eureka em benefício do **Service Discovery nativo do Kubernetes (CoreDNS + Kube-Proxy)**:
+Para além do ambiente em Docker Compose, a plataforma inclui manifestos declarativos preparados para validação e implantação em clusters Kubernetes (tais como AKS, EKS, GKE ou Minikube/Kind), orquestrando o **Eureka Service Registry (`eureka-server:8761`)** em conjunto com os *Services* internos do Kubernetes (`CoreDNS` + `Kube-Proxy`) para manter compatibilidade integral com o balanceamento dinâmico `lb://` do Spring Cloud Gateway e clientes OpenFeign:
 
 > [!NOTE]
 > **Validação Declarativa vs. Cluster em Execução:** O funcionamento e os fluxos da plataforma foram validados funcionalmente através do ambiente conteinerizado em Docker Compose. Os manifestos em `k8s/` constituem uma especificação declarativa completa e pronta para implantação, validada sintaticamente no GitHub Actions CI através de `kubectl kustomize k8s/` (não pressupondo um cluster ativo de produção em execução permanente).
@@ -446,7 +447,7 @@ kubectl apply -k k8s/
 #### Estrutura de Manifestos Kubernetes (`/k8s`):
 - **`00-namespace.yaml`:** Criação do namespace isolado `carpooling`.
 - **`01-configmap.yaml` & `02-secrets.yaml`:** Parametrização desacoplada de variáveis de ambiente e credenciais criptografadas.
-- **`03-infrastructure.yaml`:** Deployments e Services internos para PostgreSQL (`:5432`), RabbitMQ (`:5672`), Redis (`:6379`) e Grafana Tempo (`:3200`, `:4318`).
+- **`03-infrastructure.yaml`:** Deployments e Services internos para PostgreSQL (`:5432`), RabbitMQ (`:5672`), Redis (`:6379`), Grafana Tempo (`:3200`, `:4318`) e Netflix Eureka (`:8761`).
 - **`04-microservices.yaml`:** Deployments com réplicas dinâmicas, *Liveness/Readiness Probes* apontadas ao `/actuator/health` e limites estritos de CPU/Memória para cada um dos 7 microsserviços de negócio.
 - **`05-gateway-frontend.yaml`:** Orquestração escalável com balanceamento de carga do `api-gateway` e da interface `frontend-service`.
 - **`06-ingress.yaml`:** Encaminhamento HTTP inteligente via NGINX Ingress Controller.

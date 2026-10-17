@@ -297,8 +297,6 @@ services:
       - carpooling-network
     depends_on:
       - prometheus
-      - tempo
-      - loki
 
   # Grafana Tempo (Distributed Tracing OTLP)
   tempo:
